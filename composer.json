@@ -1,0 +1,19 @@
+{
+    "name": "drahil/socraites",
+    "autoload": {
+        "psr-4": {
+            "drahil\\Socraites\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Omar Djecevic",
+            "email": "djecevic.omar@gmail.com"
+        }
+    ],
+    "require": {
+        "nikic/php-parser": "^5.4",
+        "symfony/console": "^7.2",
+        "symfony/process": "^7.2"
+    }
+}
