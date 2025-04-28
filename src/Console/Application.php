@@ -3,6 +3,8 @@
 namespace drahil\Socraites\Console;
 
 use Symfony\Component\Console\Application as BaseApplication;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class Application extends BaseApplication
 {
@@ -10,7 +12,6 @@ class Application extends BaseApplication
     {
         parent::__construct('socraites', '0.0.1');
 
-        // Add commands here
-        // first one will be IndexCommand
+        $this->add(new CodeReviewCommand());
     }
 }
