@@ -40,7 +40,7 @@ class GitService
             if ($statusCode[0] === 'D' || $statusCode[1] === 'D') {
             }
 
-            if (pathinfo($path, PATHINFO_EXTENSION) === 'php') {
+            if ($statusCode !== '??' && pathinfo($path, PATHINFO_EXTENSION) === 'php') {
                 $files[] = $path;
             }
         }

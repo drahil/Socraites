@@ -15,7 +15,7 @@ class AiService
         $this->token = $token;
     }
 
-    public function getCodeReview(string $gitDiff): string
+    public function getCodeReview(string $gitDiff, array $context): string
     {
         $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
             'headers' => [
@@ -27,11 +27,15 @@ class AiService
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are an expert code reviewer. Review the following git diff and suggest improvements, catch bugs, and comment on best practices.',
+                        'content' => 'You are an expert code reviewer. First, carefully read the provided context. Then, review the following git diff based on that context. Suggest improvements, catch bugs, and comment on best practices.',
                     ],
                     [
                         'role' => 'user',
-                        'content' => $gitDiff,
+                        'content' => "Context:\n" . json_encode($context, JSON_PRETTY_PRINT),
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => "Git diff:\n" . $gitDiff,
                     ],
                 ],
                 'temperature' => 0.2,

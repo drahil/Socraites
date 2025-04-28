@@ -3,6 +3,7 @@
 namespace drahil\Socraites\Console;
 
 use drahil\Socraites\Services\AiService;
+use drahil\Socraites\Services\ContextBuilder;
 use drahil\Socraites\Services\GitService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -12,8 +13,8 @@ class CodeReviewCommand extends Command
 {
     protected GitService $gitService;
     protected AiService $aiService;
-    private string $name;
-
+    protected array $context;
+    protected ContextBuilder $contextBuilder;
 
     public function __construct()
     {
@@ -28,9 +29,12 @@ class CodeReviewCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $changedFiles = $this->gitService->getGitDiff();
+        $changedCode = $this->gitService->getGitDiff();
+        $changedFiles = $this->gitService->getChangedFiles();
 
-        $codeReview = $this->aiService->getCodeReview($changedFiles);
+        $context = $this->contextBuilder->buildContext($changedFiles);
+
+        $codeReview = $this->aiService->getCodeReview($changedCode, $context);
 
         $output->writeln($codeReview);
 
@@ -48,5 +52,7 @@ class CodeReviewCommand extends Command
         }
 
         $this->aiService = new AiService($token);
+
+        $this->contextBuilder = new ContextBuilder();
     }
 }
