@@ -3,6 +3,7 @@
 namespace drahil\Socraites\Parsers;
 
 use drahil\Socraites\Parsers\Visitors\DependencyVisitor;
+use drahil\Socraites\Parsers\Visitors\UsageTrackingVisitor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
@@ -31,11 +32,18 @@ class FileParser
         $this->traverser->traverse($ast);
         $this->traverser->removeVisitor($dependencyVisitor);
 
+        $imports = $dependencyVisitor->getUseStatements();
+
+        $usageVisitor = new UsageTrackingVisitor($imports);
+        $this->traverser->addVisitor($usageVisitor);
+        $this->traverser->traverse($ast);
+
         return [
-            'imports' => $dependencyVisitor->getUseStatements(),
+            'imports' => $imports,
             'extends' => $dependencyVisitor->getExtendedClasses(),
             'classes' => $dependencyVisitor->getDefinedClasses(),
             'functions' => $dependencyVisitor->getDefinedFunctions(),
+            'usageCounts' => $usageVisitor->getUsageCounts(),
         ];
     }
 }

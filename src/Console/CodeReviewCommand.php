@@ -32,7 +32,8 @@ class CodeReviewCommand extends Command
         $changedCode = $this->gitService->getGitDiff();
         $changedFiles = $this->gitService->getChangedFiles();
 
-        $context = $this->contextBuilder->buildContext($changedFiles);
+        $this->contextBuilder = new ContextBuilder($changedFiles);
+        $context = $this->contextBuilder->buildContext();
 
         $codeReview = $this->aiService->getCodeReview($changedCode, $context);
 
@@ -52,7 +53,5 @@ class CodeReviewCommand extends Command
         }
 
         $this->aiService = new AiService($token);
-
-        $this->contextBuilder = new ContextBuilder();
     }
 }
