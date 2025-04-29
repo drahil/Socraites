@@ -17,6 +17,29 @@ class AiService
 
     public function getCodeReview(string $gitDiff, array $context): string
     {
+        $content = <<<EOT
+            You are an expert code reviewer.
+            
+            First, carefully read the provided context. If any file context is missing, mention which ones.
+            
+            Then, review the following git diff based on the context:
+            - List all files that are changed.
+            - List all files from the context.
+            - Summarize the overall goal of the changes based on the diff.
+            
+            Next, review the code in the diff:
+            - Identify and explain any issues you find.
+            - Suggest improvements and highlight potential bugs.
+            - Comment on adherence to best practices.
+            
+            Provide comments per file:
+            - If a file has large changes, suggest appropriate design patterns or refactoring strategies.
+            
+            At the end, suggest a suitable Git commit message summarizing the intent of the changes. Keep it short and clear.
+            
+            Be concise and structured in your feedback.
+            EOT;
+
         $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->token,
@@ -27,7 +50,7 @@ class AiService
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are an expert code reviewer. First, carefully read the provided context. Then, review the following git diff based on that context. Suggest improvements, catch bugs, and comment on best practices.',
+                        'content' => $content,
                     ],
                     [
                         'role' => 'user',

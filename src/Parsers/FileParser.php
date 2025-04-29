@@ -28,22 +28,22 @@ class FileParser
 
         $dependencyVisitor = new DependencyVisitor();
         $this->traverser->addVisitor($dependencyVisitor);
-
         $this->traverser->traverse($ast);
         $this->traverser->removeVisitor($dependencyVisitor);
 
         $imports = $dependencyVisitor->getUseStatements();
 
-        $usageVisitor = new UsageTrackingVisitor($imports);
+        $usageVisitor = new UsageTrackingVisitor($imports, $filePath);
         $this->traverser->addVisitor($usageVisitor);
         $this->traverser->traverse($ast);
+        $this->traverser->removeVisitor($usageVisitor);
 
         return [
             'imports' => $imports,
             'extends' => $dependencyVisitor->getExtendedClasses(),
             'classes' => $dependencyVisitor->getDefinedClasses(),
             'functions' => $dependencyVisitor->getDefinedFunctions(),
-            'usageCounts' => $usageVisitor->getUsageCounts(),
+            'usageCounts' => $usageVisitor->getFileUsageCounts(),
         ];
     }
 }

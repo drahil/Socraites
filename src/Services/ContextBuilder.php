@@ -3,6 +3,7 @@
 namespace drahil\Socraites\Services;
 
 use drahil\Socraites\Parsers\FileParser;
+use Exception;
 
 class ContextBuilder
 {
@@ -68,7 +69,8 @@ class ContextBuilder
                         $this->changedFiles[] = $dependencyFile;
                     }
                 }
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
+                echo "Error parsing file $file: " . $exception->getMessage() . "\n";
             }
         }
     }
@@ -76,22 +78,18 @@ class ContextBuilder
     private function calculateRelevanceScore(string $filePath, string $sourceFile, array $parseResult): int
     {
         $score = 0;
-        $filePath = $this->normalizeClassName($filePath);
-        echo "Calculating relevance score for $filePath\n";
-        echo "Source file: $sourceFile\n";
-        echo "Parse result: " . json_encode($parseResult) . "\n";
 
-        if (isset($parseResult['imports'][$filePath])) {
-            $score += 10;
-        }
-
-        if (isset($parseResult['extends'][$filePath])) {
+        if (in_array($filePath, $parseResult['imports'])) {
             $score += 5;
         }
 
-        if (isset($parseResult['usageCounts'][$filePath])) {
+        if (in_array($filePath, $parseResult['extends'])) {
+            $score += 10;
+        }
+
+        if (in_array($filePath, array_keys($parseResult['usageCounts'][$sourceFile]))) {
             // Logarithmic scale to avoid classes with many references dominating completely
-            $usageCount = $parseResult['usageCounts'][$filePath];
+            $usageCount = $parseResult['usageCounts'][$sourceFile][$filePath];
             if ($usageCount > 0) {
                 $score += 5 + min(20, (int)(5 * log($usageCount + 1, 2)));
             }
@@ -102,14 +100,9 @@ class ContextBuilder
 
     private function createContext(): void
     {
-        $maxContextSize = 350 * 1024; // ~350KB
+        $maxContextSize = 100 * 1024; // ~100KB
 
         foreach (array_keys($this->fileScores) as $file) {
-//            echo "Processing file: $file\n";
-//            echo "Total size: {$this->totalSize}\n";
-//            echo "Max context size: $maxContextSize\n";
-//            echo "Current file size: " . strlen($this->context[$file] ?? '') . "\n";
-            echo "File scores: " . json_encode($this->fileScores) . "\n";
             if (isset($this->processedFiles[$file])) {
                 continue;
             }
@@ -122,6 +115,7 @@ class ContextBuilder
             $fileSize = strlen($fileContent);
 
             if ($this->totalSize + $fileSize > $maxContextSize) {
+                echo "Context size limit reached. Stopping at $file.\n";
                 continue;
             }
 
@@ -131,6 +125,7 @@ class ContextBuilder
         }
     }
 
+    // TODO this will be removed once we have a proper class map
     private function classToFilePath(int|string $class): string
     {
         // Remove the top-level namespace (drahil\Socraites\)
@@ -141,11 +136,5 @@ class ContextBuilder
 
         // Base path is /src/
         return __DIR__ . '/../' . $relativePath;
-    }
-
-    private function normalizeClassName(string $className): string
-    {
-        // Remove any potential escape sequences
-        return str_replace('\\', '\\\\', $className);
     }
 }
