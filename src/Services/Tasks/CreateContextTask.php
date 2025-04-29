@@ -46,6 +46,6 @@ class CreateContextTask implements ContextTaskInterface
         $relativePath = str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
 
         // Base path is /src/
-        return __DIR__ . '/../' . $relativePath;
+        return __DIR__ . '/../../' . $relativePath;
     }
 }
