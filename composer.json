@@ -5,6 +5,9 @@
             "drahil\\Socraites\\": "src/"
         }
     },
+    "bin": [
+        "bin/socraites"
+    ],
     "authors": [
         {
             "name": "Omar Djecevic",

@@ -3,18 +3,25 @@
 namespace drahil\Socraites\Services;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 class AiService
 {
-    protected string $token;
     protected Client $client;
 
-    public function __construct(string $token)
+    public function __construct(protected string $token)
     {
         $this->client = new Client();
-        $this->token = $token;
     }
 
+    /**
+     * Generates a code review based on the provided git diff and context.
+     *
+     * @param string $gitDiff The git diff to be reviewed.
+     * @param array $context The context for the code review.
+     * @return string The generated code review.
+     * @throws GuzzleException
+     */
     public function getCodeReview(string $gitDiff, array $context): string
     {
         $content = <<<EOT

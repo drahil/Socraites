@@ -21,6 +21,17 @@ class FileParser
         $this->traverser->addVisitor(new NameResolver());
     }
 
+    /**
+     * Parses a PHP file and collects information about its dependencies, defined classes, functions, and usage counts.
+     *
+     * @param string $filePath The path to the PHP file to parse.
+     * @return array An associative array containing:
+     *               - 'imports': An array of imported classes.
+     *               - 'extends': An array of extended classes.
+     *               - 'classes': An array of defined classes.
+     *               - 'functions': An array of defined functions.
+     *               - 'usageCounts': An array of usage counts for each class.
+     */
     public function parse(string $filePath): array
     {
         $code = file_get_contents($filePath);

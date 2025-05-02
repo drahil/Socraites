@@ -7,20 +7,18 @@ use drahil\Socraites\Services\ContextState;
 
 class CreateContextTask implements ContextTaskInterface
 {
-    private int $maxContextSize;
-    private ClassMapService $classMapService;
-    private array $namespaceFilters = [];
-
     public function __construct(
-        ClassMapService $classMapService,
-        int $maxContextSize = 100 * 1024,
-        array $namespaceFilters = []
-    ) {
-        $this->classMapService = $classMapService;
-        $this->maxContextSize = $maxContextSize;
-        $this->namespaceFilters = $namespaceFilters;
-    }
+        private ClassMapService $classMapService,
+        private int $maxContextSize = 100 * 1024,
+        private array $namespaceFilters = []
+    ) {}
 
+    /**
+     * Execute the task to create context from files.
+     *
+     * @param ContextState $state
+     * @return void
+     */
     public function execute(ContextState $state): void
     {
         foreach (array_keys($state->fileScores) as $file) {
@@ -28,13 +26,13 @@ class CreateContextTask implements ContextTaskInterface
                 continue;
             }
 
-            if (!empty($this->namespaceFilters) && !$this->matchesNamespaceFilters($file)) {
+            if (! empty($this->namespaceFilters) && !$this->matchesNamespaceFilters($file)) {
                 continue;
             }
 
             $filePath = $this->classMapService->getFilePathForClass($file);
 
-            if (!$filePath || !file_exists($filePath)) {
+            if (! $filePath || ! file_exists($filePath)) {
                 continue;
             }
 
@@ -42,7 +40,7 @@ class CreateContextTask implements ContextTaskInterface
             $fileSize = strlen($fileContent);
 
             if ($state->totalSize + $fileSize > $this->maxContextSize) {
-                echo "Context size limit reached. Stopping at $file.\n";
+                echo "Context size limit reached. Skipping file: $file\n";
                 continue;
             }
 
@@ -52,6 +50,9 @@ class CreateContextTask implements ContextTaskInterface
 
     /**
      * Check if the class name matches any of the namespace filters
+     *
+     * @param string $className
+     * @return bool
      */
     private function matchesNamespaceFilters(string $className): bool
     {

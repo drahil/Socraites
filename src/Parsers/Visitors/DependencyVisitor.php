@@ -12,6 +12,11 @@ class DependencyVisitor extends NodeVisitorAbstract
     private array $definedClasses = [];
     private array $definedFunctions = [];
 
+    /**
+     * This method is called when the visitor enters a node.
+     * It is used to collect information about the node.
+     *
+     */
     public function enterNode(Node $node): void
     {
         if ($node instanceof Node\Stmt\Use_) {
@@ -40,21 +45,41 @@ class DependencyVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * Get the use statements collected by the visitor.
+     *
+     * @return array
+     */
     public function getUseStatements(): array
     {
         return $this->useStatements;
     }
 
+    /**
+     * Get the extended classes collected by the visitor.
+     *
+     * @return array
+     */
     public function getExtendedClasses(): array
     {
         return $this->extendedClasses;
     }
 
+    /**
+     * Get the defined classes collected by the visitor.
+     *
+     * @return array
+     */
     public function getDefinedClasses(): array
     {
         return $this->definedClasses;
     }
 
+    /**
+     * Get the defined functions collected by the visitor.
+     *
+     * @return array
+     */
     public function getDefinedFunctions(): array
     {
         return $this->definedFunctions;

@@ -33,23 +33,24 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         }
     }
 
-    public function setCurrentFile(string $filePath): void
-    {
-        $this->currentFile = $filePath;
-
-        if (!isset($this->fileUsageCounts[$filePath])) {
-            foreach ($this->imports as $fullName) {
-                $this->fileUsageCounts[$filePath][$fullName] = 0;
-            }
-        }
-    }
-
+    /**
+     * Get the short name of a class from its fully qualified class name (FQCN).
+     *
+     * @param string $fqcn The fully qualified class name.
+     * @return string The short name of the class.
+     */
     private function getShortName(string $fqcn): string
     {
         $parts = explode('\\', $fqcn);
         return end($parts);
     }
 
+    /**
+     * Resolve the fully qualified class name (FQCN) from a Name node.
+     *
+     * @param Name $name The Name node.
+     * @return string|null The fully qualified class name or null if not found.
+     */
     private function resolveClassName(Name $name): ?string
     {
         $className = $name->toString();
@@ -81,6 +82,13 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         return null;
     }
 
+    /**
+     * This method is called before the traversal of the nodes starts.
+     * It is used to reset the visitor state.
+     *
+     * @param array $nodes The nodes to be traversed.
+     * @return null
+     */
     public function beforeTraverse(array $nodes)
     {
         $this->currentNamespace = '';
@@ -88,6 +96,13 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         return null;
     }
 
+    /**
+     * This method is called when the visitor enters a node.
+     * It is used to collect information about the node.
+     *
+     * @param Node $node The node being visited.
+     * @return void
+     */
     public function enterNode(Node $node): void
     {
         if ($node instanceof Node\Stmt\Namespace_) {
@@ -102,6 +117,26 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         $this->trackTypeHints($node);
     }
 
+    /**
+     * Get the usage counts for file.
+     *
+     * @return array
+     */
+    public function getFileUsageCounts(): array
+    {
+        $result = [];
+        foreach ($this->fileUsageCounts as $file => $counts) {
+            $result[$file] = array_filter($counts, fn($count) => $count > 0);
+        }
+        return $result;
+    }
+
+    /**
+     * Increment the usage count for a fully qualified class name (FQCN).
+     *
+     * @param string $fqcn
+     * @return void
+     */
     protected function incrementUsageCount(string $fqcn): void
     {
         $this->usageCounts[$fqcn]++;
@@ -111,9 +146,15 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * Track variable assignments to classes.
+     *
+     * @param Node $node The node being visited.
+     * @return void
+     */
     protected function trackVariableAssignments(Node $node): void
     {
-        if (!$node instanceof Node\Expr\Assign) {
+        if (! $node instanceof Node\Expr\Assign) {
             return;
         }
 
@@ -133,9 +174,15 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * Track method calls to classes.
+     *
+     * @param Node $node The node being visited.
+     * @return void
+     */
     protected function trackMethodCalls(Node $node): void
     {
-        if (!$node instanceof Node\Expr\MethodCall) {
+        if (! $node instanceof Node\Expr\MethodCall) {
             return;
         }
 
@@ -155,6 +202,12 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * Track static calls to classes.
+     *
+     * @param Node $node The node being visited.
+     * @return void
+     */
     protected function trackStaticCalls(Node $node): void
     {
         if ($node instanceof Node\Expr\StaticCall && $node->class instanceof Name) {
@@ -165,6 +218,12 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * Track new instances of classes.
+     *
+     * @param Node $node The node being visited.
+     * @return void
+     */
     protected function trackNewInstances(Node $node): void
     {
         if ($node instanceof Node\Expr\New_ && $node->class instanceof Name) {
@@ -175,6 +234,12 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * Track type hints in function and method signatures.
+     *
+     * @param Node $node The node being visited.
+     * @return void
+     */
     protected function trackTypeHints(Node $node): void
     {
         if ($node instanceof Node\Stmt\ClassMethod || $node instanceof Node\Stmt\Function_) {
@@ -194,19 +259,5 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
                 }
             }
         }
-    }
-
-    public function getFileUsageCounts(): array
-    {
-        $result = [];
-        foreach ($this->fileUsageCounts as $file => $counts) {
-            $result[$file] = array_filter($counts, fn($count) => $count > 0);
-        }
-        return $result;
-    }
-
-    public function getUsageCountsForFile(string $filePath): array
-    {
-        return $this->fileUsageCounts[$filePath] ?? [];
     }
 }

@@ -24,6 +24,11 @@ class ContextBuilder
         ];
     }
 
+    /**
+     * Build the context by executing the tasks in order.
+     *
+     * @return array The built context.
+     */
     public function buildContext(): array
     {
         foreach ($this->tasks as $task) {

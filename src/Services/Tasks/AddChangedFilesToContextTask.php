@@ -7,6 +7,12 @@ use RuntimeException;
 
 class AddChangedFilesToContextTask implements ContextTaskInterface
 {
+    /**
+     * Execute the task to add changed files to the context.
+     *
+     * @param ContextState $state
+     * @return void
+     */
     public function execute(ContextState $state): void
     {
         foreach ($state->changedFiles as $file) {

@@ -7,6 +7,12 @@ use Symfony\Component\Process\Process;
 
 class GitService
 {
+    /**
+     * Get the list of changed files in the git repository.
+     *
+     * @return array List of changed files.
+     * @throws RuntimeException If the git command fails.
+     */
     public function getChangedFiles(): array
     {
         $command = ['git', 'status', '--porcelain'];
@@ -32,7 +38,7 @@ class GitService
             $path = trim(substr($line, 3));
 
             // Handle renamed files
-            if (strpos($path, ' -> ') !== false) {
+            if (str_contains($path, ' -> ')) {
                 list(, $path) = explode(' -> ', $path);
             }
 
@@ -48,6 +54,12 @@ class GitService
         return $files;
     }
 
+    /**
+     * Get the git diff of the staged files.
+     *
+     * @return string The git diff output.
+     * @throws RuntimeException If the git command fails.
+     */
     public function getGitDiff(): string
     {
         $command = ['git', 'diff', '--staged'];

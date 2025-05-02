@@ -12,6 +12,12 @@ class ProcessFilesTask implements ContextTaskInterface
         private FileParser $fileParser
     ) {}
 
+    /**
+     * Execute the task to process files and update the context state.
+     *
+     * @param ContextState $state
+     * @return void
+     */
     public function execute(ContextState $state): void
     {
         foreach ($state->changedFiles as $file) {
@@ -33,7 +39,7 @@ class ProcessFilesTask implements ContextTaskInterface
 
                 arsort($state->fileScores);
                 foreach (array_keys($state->fileScores) as $dependencyFile) {
-                    if (!isset($state->processedFiles[$dependencyFile]) && !in_array($dependencyFile, $state->changedFiles)) {
+                    if (! isset($state->processedFiles[$dependencyFile]) && !in_array($dependencyFile, $state->changedFiles)) {
                         $state->changedFiles[] = $dependencyFile;
                     }
                 }
@@ -43,6 +49,14 @@ class ProcessFilesTask implements ContextTaskInterface
         }
     }
 
+    /**
+     * Calculate the relevance score for a file based on its dependencies and usage.
+     *
+     * @param string $filePath The path to the file.
+     * @param string $sourceFile The source file that references this file.
+     * @param array $parseResult The result of parsing the source file.
+     * @return int The calculated relevance score.
+     */
     private function calculateRelevanceScore(string $filePath, string $sourceFile, array $parseResult): int
     {
         $score = 0;
