@@ -25,6 +25,11 @@ class OutputFormatter
         $this->configureStyles();
     }
 
+    public function setReview(array $review): void
+    {
+        $this->review = $review;
+    }
+
     private function configureStyles(): void
     {
         $formatter = $this->output->getFormatter();
@@ -103,22 +108,22 @@ class OutputFormatter
         $this->output->writeln("  {$this->icons['reviewing']} Reviewing: <file>{$fileName}</>");
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
 
-        if (!empty($block['summary'])) {
+        if (! empty($block['summary'])) {
             $this->output->writeln("  <title>{$this->icons['summary']} Summary:</>");
             $this->writeIndentedLines($block['summary']);
         }
 
-        if (!empty($block['major_issues'])) {
+        if (! empty($block['major_issues'])) {
             $this->output->writeln("  <major>{$this->icons['major_issues']} Major Issues:</>");
             $this->writeIndentedLines($block['major_issues']);
         }
 
-        if (!empty($block['minor_issues'])) {
+        if (! empty($block['minor_issues'])) {
             $this->output->writeln("  <minor>{$this->icons['minor_issues']}  Minor Issues:</>");
             $this->writeIndentedLines($block['minor_issues']);
         }
 
-        if (!empty($block['suggestions'])) {
+        if (! empty($block['suggestions'])) {
             $this->output->writeln("  <suggestion>{$this->icons['suggestions']} Suggestions:</>");
             $this->writeIndentedLines($block['suggestions']);
         }
@@ -151,7 +156,7 @@ class OutputFormatter
     private function printSectionFooter(bool $isLast = false): void
     {
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
-        if (!$isLast) {
+        if (! $isLast) {
             $this->output->writeln('');
         }
     }

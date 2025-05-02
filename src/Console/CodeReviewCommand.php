@@ -18,6 +18,7 @@ class CodeReviewCommand extends Command
     protected AiService $aiService;
     protected array $context;
     protected ContextBuilder $contextBuilder;
+    protected OutputFormatter $formatter;
 
     public function __construct()
     {
@@ -54,13 +55,8 @@ class CodeReviewCommand extends Command
 
         $codeReview = $this->aiService->getCodeReview($changedCode, $context);
 
-        //save code review to txt file
-        $fileName = 'code_review_' . date('Y-m-d_H-i-s') . '.txt';
-        file_put_contents($fileName, json_decode($codeReview, JSON_PRETTY_PRINT));
-        file_put_contents($fileName . 'other', $codeReview);
-
-        $formatter = new OutputFormatter(json_decode($codeReview, true));
-        $formatter->print();
+        $this->formatter->setReview(json_decode($codeReview, true));
+        $this->formatter->print();
 
         return Command::SUCCESS;
     }
@@ -73,13 +69,12 @@ class CodeReviewCommand extends Command
     private function resolveDependencies(): void
     {
         $this->gitService = new GitService();
+        $this->formatter = new OutputFormatter([]);
 
         $token = getenv('OPENAI_API_KEY');
-
         if ($token === false) {
             throw new RuntimeException('Environment variable OPENAI_API_KEY is not set.');
         }
-
         $this->aiService = new AiService($token);
     }
 }

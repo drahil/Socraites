@@ -43,7 +43,7 @@ class AiService
             - If a file has large changes, suggest appropriate design patterns or refactoring strategies.
             
             At the end, suggest a suitable Git commit message summarizing the intent of the changes. Keep it short and clear.
-            Be concise and structured in your feedback.
+            Be concise and structured in your feedback. Do not go into too much detail. Pay special attention to design patterns and best practices.
             
             Your response should be JSON. This is the draft:
             {
