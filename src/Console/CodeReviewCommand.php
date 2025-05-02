@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class CodeReviewCommand extends Command
@@ -19,6 +20,7 @@ class CodeReviewCommand extends Command
     protected array $context;
     protected ContextBuilder $contextBuilder;
     protected OutputFormatter $formatter;
+    protected QuotePrinter $quotePrinter;
 
     public function __construct()
     {
@@ -50,6 +52,8 @@ class CodeReviewCommand extends Command
         $changedCode = $this->gitService->getGitDiff();
         $changedFiles = $this->gitService->getChangedFiles();
 
+        $this->quotePrinter->printQuote();
+
         $this->contextBuilder = new ContextBuilder($changedFiles);
         $context = $this->contextBuilder->buildContext();
 
@@ -70,6 +74,7 @@ class CodeReviewCommand extends Command
     {
         $this->gitService = new GitService();
         $this->formatter = new OutputFormatter([]);
+        $this->quotePrinter = new QuotePrinter(new ConsoleOutput());
 
         $token = getenv('OPENAI_API_KEY');
         if ($token === false) {

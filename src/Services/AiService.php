@@ -28,6 +28,7 @@ class AiService
             You are an expert code reviewer.
             
             First, carefully read the provided context. If any file context is missing, mention which ones.
+            Try to analyze all code changes as a part of one feature.
             
             Then, review the following git diff based on the context:
             - List all files that are changed.
@@ -44,6 +45,7 @@ class AiService
             
             At the end, suggest a suitable Git commit message summarizing the intent of the changes. Keep it short and clear.
             Be concise and structured in your feedback. Do not go into too much detail. Pay special attention to design patterns and best practices.
+            In suggestions, feel free to add what you may think is the best way to do it.
             
             Your response should be JSON. This is the draft:
             {
