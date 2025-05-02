@@ -43,8 +43,48 @@ class AiService
             - If a file has large changes, suggest appropriate design patterns or refactoring strategies.
             
             At the end, suggest a suitable Git commit message summarizing the intent of the changes. Keep it short and clear.
-            
             Be concise and structured in your feedback.
+            
+            Your response should be JSON. This is the draft:
+            {
+                "files": {
+                    [
+                        "name": "file1.php",
+                        "summary": "Summary of changes",
+                        "issues": [
+                            "Issue 1",
+                            "Issue 2"
+                        ],
+                        "suggestions": [
+                            "Suggestion 1",
+                            "Suggestion 2"
+                        ],
+                        "major_issues": [
+                            "Major issue 1"
+                        ],
+                        "minor_issues": [
+                            "Minor issue 1"
+                        ]
+                    ],
+                    [
+                        "name": "file2.php",
+                        "summary": "Summary of changes",
+                        "issues": [
+                            "Issue 1"
+                        ],
+                        "suggestions": [
+                            "Suggestion 1"
+                        ]
+                    ]
+                },
+                "context": [
+                    "file_from_context_1.php",
+                    "file_from_context_2.php"
+                ],
+                "overall_summary": "Overall summary of the changes",
+                "commit_message": "Suggested commit message"
+            }
+            
             EOT;
 
         $response = $this->client->post('https://api.openai.com/v1/chat/completions', [

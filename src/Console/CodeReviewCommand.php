@@ -2,9 +2,11 @@
 
 namespace drahil\Socraites\Console;
 
+use drahil\Socraites\Console\Formatters\OutputFormatter;
 use drahil\Socraites\Services\AiService;
 use drahil\Socraites\Services\ContextBuilder;
 use drahil\Socraites\Services\GitService;
+use GuzzleHttp\Exception\GuzzleException;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -40,6 +42,7 @@ class CodeReviewCommand extends Command
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
+     * @throws GuzzleException
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -51,7 +54,13 @@ class CodeReviewCommand extends Command
 
         $codeReview = $this->aiService->getCodeReview($changedCode, $context);
 
-        $output->writeln($codeReview);
+        //save code review to txt file
+        $fileName = 'code_review_' . date('Y-m-d_H-i-s') . '.txt';
+        file_put_contents($fileName, json_decode($codeReview, JSON_PRETTY_PRINT));
+        file_put_contents($fileName . 'other', $codeReview);
+
+        $formatter = new OutputFormatter(json_decode($codeReview, true));
+        $formatter->print();
 
         return Command::SUCCESS;
     }
