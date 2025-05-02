@@ -2,15 +2,23 @@
 
 namespace drahil\Socraites\Services\Tasks;
 
+use drahil\Socraites\Services\ClassMapService;
 use drahil\Socraites\Services\ContextState;
 
 class CreateContextTask implements ContextTaskInterface
 {
     private int $maxContextSize;
+    private ClassMapService $classMapService;
+    private array $namespaceFilters = [];
 
-    public function __construct(int $maxContextSize = 100 * 1024)
-    {
+    public function __construct(
+        ClassMapService $classMapService,
+        int $maxContextSize = 100 * 1024,
+        array $namespaceFilters = []
+    ) {
+        $this->classMapService = $classMapService;
         $this->maxContextSize = $maxContextSize;
+        $this->namespaceFilters = $namespaceFilters;
     }
 
     public function execute(ContextState $state): void
@@ -19,11 +27,17 @@ class CreateContextTask implements ContextTaskInterface
             if (isset($state->processedFiles[$file])) {
                 continue;
             }
-            if (! str_starts_with($file, 'drahil\\Socraites\\')) {
+
+            if (!empty($this->namespaceFilters) && !$this->matchesNamespaceFilters($file)) {
                 continue;
             }
 
-            $filePath = $this->classToFilePath($file);
+            $filePath = $this->classMapService->getFilePathForClass($file);
+
+            if (!$filePath || !file_exists($filePath)) {
+                continue;
+            }
+
             $fileContent = file_get_contents($filePath);
             $fileSize = strlen($fileContent);
 
@@ -36,16 +50,21 @@ class CreateContextTask implements ContextTaskInterface
         }
     }
 
-    // TODO this will be removed once we have a proper class map
-    private function classToFilePath(int|string $class): string
+    /**
+     * Check if the class name matches any of the namespace filters
+     */
+    private function matchesNamespaceFilters(string $className): bool
     {
-        // Remove the top-level namespace (drahil\Socraites\)
-        $class = preg_replace('/^drahil\\\\Socraites\\\\/', '', $class);
+        if (empty($this->namespaceFilters)) {
+            return true;
+        }
 
-        // Replace \ with /
-        $relativePath = str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
+        foreach ($this->namespaceFilters as $namespace) {
+            if (str_starts_with($className, $namespace)) {
+                return true;
+            }
+        }
 
-        // Base path is /src/
-        return __DIR__ . '/../../' . $relativePath;
+        return false;
     }
 }

@@ -20,7 +20,7 @@ class ContextBuilder
         $this->tasks = [
             new AddChangedFilesToContextTask(),
             new ProcessFilesTask(new FileParser()),
-            new CreateContextTask()
+            new CreateContextTask(new ClassMapService())
         ];
     }
 
