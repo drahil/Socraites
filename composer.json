@@ -3,7 +3,10 @@
     "autoload": {
         "psr-4": {
             "drahil\\Socraites\\": "src/"
-        }
+        },
+        "files": [
+            "src/Helpers/socraites_configs.php"
+        ]
     },
     "bin": [
         "bin/socraites"

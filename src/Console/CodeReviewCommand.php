@@ -76,9 +76,7 @@ class CodeReviewCommand extends Command
         $this->formatter = new OutputFormatter([]);
         $this->quotePrinter = new QuotePrinter(new ConsoleOutput());
 
-        $token = function_exists('config')
-            ? config('socraites.openai_api_key')
-            : getenv('OPENAI_API_KEY');
+        $token = socraites_config('openai_api_key');
 
         if (! $token) {
             throw new RuntimeException('OPENAI_API_KEY is not set.');

@@ -9,7 +9,6 @@ class CreateContextTask implements ContextTaskInterface
 {
     public function __construct(
         private ClassMapService $classMapService,
-        private int $maxContextSize = 100 * 1024,
         private array $namespaceFilters = []
     ) {}
 
@@ -39,7 +38,9 @@ class CreateContextTask implements ContextTaskInterface
             $fileContent = file_get_contents($filePath);
             $fileSize = strlen($fileContent);
 
-            if ($state->totalSize + $fileSize > $this->maxContextSize) {
+            $maxContextSize = socraites_config('max_context_size');
+
+            if ($state->totalSize + $fileSize > $maxContextSize) {
                 echo "Context size limit reached. Skipping file: $file\n";
                 continue;
             }

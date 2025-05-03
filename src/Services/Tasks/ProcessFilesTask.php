@@ -62,11 +62,11 @@ class ProcessFilesTask implements ContextTaskInterface
         $score = 0;
 
         if (in_array($filePath, $parseResult['imports'])) {
-            $score += 5;
+            $score += socraites_config('scores.import');
         }
 
         if (in_array($filePath, $parseResult['extends'])) {
-            $score += 10;
+            $score += socraites_config('scores.extends');
         }
 
         if (in_array($filePath, array_keys($parseResult['usageCounts'][$sourceFile]))) {
