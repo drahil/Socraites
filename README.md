@@ -1,4 +1,4 @@
-# Socraites - AI-Powered Code Review Tool
+# Socraites - AI-Powered Code Review Tool for PHP
 
 
 An intelligent CLI tool that performs AI-assisted code reviews by analyzing your Git staged changes and their context.
