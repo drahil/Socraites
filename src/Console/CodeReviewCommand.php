@@ -2,7 +2,6 @@
 
 namespace drahil\Socraites\Console;
 
-use Dotenv\Dotenv;
 use drahil\Socraites\Console\Formatters\OutputFormatter;
 use drahil\Socraites\Services\AiService;
 use drahil\Socraites\Services\ContextBuilder;
@@ -77,15 +76,12 @@ class CodeReviewCommand extends Command
         $this->formatter = new OutputFormatter([]);
         $this->quotePrinter = new QuotePrinter(new ConsoleOutput());
 
-        if (! getenv('OPENAI_API_KEY')) {
-            $dotenv = Dotenv::createImmutable(getcwd());
-            $dotenv->load();
-        }
-
-        $token = $_ENV['OPENAI_API_KEY'] ?? null;
+        $token = function_exists('config')
+            ? config('socraites.openai_api_key')
+            : getenv('OPENAI_API_KEY');
 
         if (! $token) {
-            throw new \RuntimeException('OPENAI_API_KEY is not set.');
+            throw new RuntimeException('OPENAI_API_KEY is not set.');
         }
 
         $this->aiService = new AiService($token);

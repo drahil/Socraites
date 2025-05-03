@@ -19,7 +19,13 @@
         "symfony/console": "^7.2",
         "symfony/process": "^7.2",
       "ext-json": "*",
-        "guzzlehttp/guzzle": "^7.0",
-        "vlucas/phpdotenv": "^5.6"
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "drahil\\Socraites\\Providers\\SocraitesServiceProvider"
+            ]
+        }
     }
 }
