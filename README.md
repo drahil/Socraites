@@ -30,6 +30,7 @@ vendor/bin/socraites code-review --framework=<framework you are using>
 ```
 
 ## Configuration
+
 Socraites can be configured either via:
 
 - Laravel-style .env file
@@ -47,6 +48,7 @@ export SOCRAITES_MAX_CONTEXT_SIZE=102400
 ```
 
 ## How It Works
+
 Socraites performs intelligent code analysis by:
 
 - Collecting Changes:
@@ -70,6 +72,7 @@ Socraites performs intelligent code analysis by:
   - Returns formatted review with actionable insights
 
 ## Example Output
+
 ```bash
 Analyzing your code...
 
@@ -112,6 +115,7 @@ Analyzing your code...
 ```
 
 ### 📦 PHP Dependencies
+
 *(Automatically installed via Composer)*
 - `PHP` ^8.0
 - `nikic/php-parser` ^5.4 *(Code analysis)*
@@ -119,4 +123,7 @@ Analyzing your code...
 - `symfony/process` ^7.2 *(Git command execution)*
 - `guzzlehttp/guzzle` ^7.0 *(OpenAI API communication)*
 
+## 📃 License
+
+Socrates is open-sourced software licensed under the [MIT license](LICENSE).
 

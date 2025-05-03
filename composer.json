@@ -30,5 +30,6 @@
                 "drahil\\Socraites\\Providers\\SocraitesServiceProvider"
             ]
         }
-    }
+    },
+    "license": "MIT"
 }
