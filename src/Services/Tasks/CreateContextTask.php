@@ -25,7 +25,7 @@ class CreateContextTask implements ContextTaskInterface
                 continue;
             }
 
-            if (! empty($this->namespaceFilters) && !$this->matchesNamespaceFilters($file)) {
+            if (! empty($this->namespaceFilters) && ! $this->matchesNamespaceFilters($file)) {
                 continue;
             }
 

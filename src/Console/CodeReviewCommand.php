@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -33,7 +34,13 @@ class CodeReviewCommand extends Command
      */
     protected function configure(): void
     {
-        $this->setDescription('Perform an AI code review');
+        $this->setDescription('Perform an AI code review')
+            ->addOption(
+                'framework',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Framework that is used in the project'
+            );
     }
 
     /**
@@ -49,6 +56,8 @@ class CodeReviewCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $framework = $input->getOption('framework');
+
         $changedCode = $this->gitService->getGitDiff();
         $changedFiles = $this->gitService->getChangedFiles();
 
@@ -57,7 +66,7 @@ class CodeReviewCommand extends Command
         $this->contextBuilder = new ContextBuilder($changedFiles);
         $context = $this->contextBuilder->buildContext();
 
-        $codeReview = $this->aiService->getCodeReview($changedCode, $context);
+        $codeReview = $this->aiService->getCodeReview($changedCode, $context, $framework);
 
         $this->formatter->setReview(json_decode($codeReview, true));
         $this->formatter->print();
