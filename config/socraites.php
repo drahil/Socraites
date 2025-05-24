@@ -42,5 +42,5 @@ return [
     |
     */
 
-    'max_context_size' => env('SOCRAITES_MAX_CONTEXT_SIZE', 100 * 1024),
+    'maximum_context_size' => env('SOCRAITES_MAX_CONTEXT_SIZE', 100 * 1024),
 ];

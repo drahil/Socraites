@@ -28,31 +28,40 @@ class AiService
         $content = <<<EOT
             You are an expert code reviewer.
             
-            First, carefully read the provided context. If any file context is missing, mention which ones.
-            Try to analyze all code changes as a part of one feature.
-            If framework is provided, use it to understand the code better. In your response make sure to mention the framework.
+            Start by reading the provided context carefully. If any file referenced in the diff is missing from the context, clearly mention which files are missing.
             
-            Then, review the following git diff based on the context:
-            - List all files that are changed.
-            - List all files from the context.
-            - Summarize the overall goal of the changes based on the diff.
+            Assume all code changes are part of a single feature or task. Use the provided framework (if mentioned) to guide your analysis and understanding.
             
-            Next, review the code in the diff:
-            - Identify and explain any issues you find.
-            - Suggest improvements and highlight potential bugs.
-            - Comment on adherence to best practices.
+            Then, review the following Git diff with these steps:
             
-            Provide comments per file:
-            - If a file has large changes, suggest appropriate design patterns or refactoring strategies.
+            1. **File Lists**
+                - List all files changed in the diff.
+                - List all files available in the provided context.
             
-            At the end, suggest a suitable Git commit message summarizing the intent of the changes. Keep it short and clear.
-            Be concise and structured in your feedback. Do not go into too much detail. Pay special attention to design patterns and best practices.
-            In suggestions, feel free to add what you may think is the best way to do it. If verbose mode is enabled, provide more detailed suggestions.
+            2. **Overall Summary**
+                - Summarize the goal of the change based on the diff. Focus on what the feature or fix is trying to achieve.
             
-            Your response should be JSON. This is the draft:
+            3. **Code Review**
+                - Point out any issues or bugs you notice.
+                - Suggest improvements to code quality, design, or maintainability.
+                - Note adherence (or lack thereof) to best practices and framework conventions.
+            
+            4. **Per-File Feedback**
+                - For each changed file:
+                    - Summarize the changes.
+                    - List issues, suggestions, major issues, and minor issues.
+                    - If a file has large or complex changes, suggest relevant design patterns or refactoring strategies.
+            
+            5. **Commit Message**
+                - Propose a concise and clear Git commit message that captures the intent of the changes.
+            
+            If `verbose mode` is enabled, include more detailed and in-depth suggestions.
+            
+            Your response must be in JSON format and follow this structure:
+            
             {
-                "files": {
-                    [
+                "files": [
+                    {
                         "name": "file1.php",
                         "summary": "Summary of changes",
                         "issues": [
@@ -69,8 +78,8 @@ class AiService
                         "minor_issues": [
                             "Minor issue 1"
                         ]
-                    ],
-                    [
+                    },
+                    {
                         "name": "file2.php",
                         "summary": "Summary of changes",
                         "issues": [
@@ -79,8 +88,8 @@ class AiService
                         "suggestions": [
                             "Suggestion 1"
                         ]
-                    ]
-                },
+                    }
+                ],
                 "context": [
                     "file_from_context_1.php",
                     "file_from_context_2.php"
@@ -88,8 +97,8 @@ class AiService
                 "overall_summary": "Overall summary of the changes",
                 "commit_message": "Suggested commit message"
             }
-            
             EOT;
+
 
         $payload = [
             'model' => 'gpt-4-turbo',
@@ -110,6 +119,24 @@ class AiService
             'temperature' => 0.2,
         ];
 
+        $payload = $this->addInfoFromConfig($payload, $framework);
+
+        $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->token,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $payload,
+        ]);
+
+        $body = $response->getBody();
+        $result = json_decode($body, true);
+
+        return $result['choices'][0]['message']['content'];
+    }
+
+    private function addInfoFromConfig(array $payload, ?string $framework = null): array
+    {
         $framework = $framework ?: socraites_config('framework');
         if ($framework) {
             $payload['messages'][] = [
@@ -126,17 +153,6 @@ class AiService
             ];
         }
 
-        $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->token,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $payload,
-        ]);
-
-        $body = $response->getBody();
-        $result = json_decode($body, true);
-
-        return $result['choices'][0]['message']['content'];
+        return $payload;
     }
 }
