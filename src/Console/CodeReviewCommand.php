@@ -25,7 +25,6 @@ class CodeReviewCommand extends Command
 
     public function __construct()
     {
-        $this->resolveDependencies();
         parent::__construct('code-review');
     }
 
@@ -56,6 +55,8 @@ class CodeReviewCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->resolveDependencies();
+
         $framework = $input->getOption('framework');
 
         $changedCode = $this->gitService->getGitDiff();
@@ -88,7 +89,7 @@ class CodeReviewCommand extends Command
         $token = socraites_config('openai_api_key');
 
         if (! $token) {
-            throw new RuntimeException('OPENAI_API_KEY is not set.');
+            throw new RuntimeException('SOCRAITES_OPENAI_API_KEY is not set.');
         }
 
         $this->aiService = new AiService($token);

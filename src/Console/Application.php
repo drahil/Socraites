@@ -8,8 +8,9 @@ class Application extends BaseApplication
 {
     public function __construct()
     {
-        parent::__construct('socraites', '0.0.1');
+        parent::__construct('socraites');
 
         $this->add(new CodeReviewCommand());
+        $this->add(new SetupCommand());
     }
 }

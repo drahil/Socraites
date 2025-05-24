@@ -34,7 +34,6 @@ class OutputFormatter
     {
         $formatter = $this->output->getFormatter();
 
-        // Define custom styles for different sections
         $formatter->setStyle('title', new OutputFormatterStyle('green', null, ['bold']));
         $formatter->setStyle('file', new OutputFormatterStyle('blue', null, ['bold']));
         $formatter->setStyle('major', new OutputFormatterStyle('red', null, ['bold']));

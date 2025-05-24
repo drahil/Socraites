@@ -47,7 +47,7 @@ class AiService
             
             At the end, suggest a suitable Git commit message summarizing the intent of the changes. Keep it short and clear.
             Be concise and structured in your feedback. Do not go into too much detail. Pay special attention to design patterns and best practices.
-            In suggestions, feel free to add what you may think is the best way to do it.
+            In suggestions, feel free to add what you may think is the best way to do it. If verbose mode is enabled, provide more detailed suggestions.
             
             Your response should be JSON. This is the draft:
             {
@@ -110,10 +110,19 @@ class AiService
             'temperature' => 0.2,
         ];
 
+        $framework = $framework ?: socraites_config('framework');
         if ($framework) {
             $payload['messages'][] = [
                 'role' => 'user',
-                'content' => "Framework:\n" . $framework,
+                'content' => "Framework: $framework",
+            ];
+        }
+
+        $verbose = socraites_config('verbose');
+        if ($verbose) {
+            $payload['messages'][] = [
+                'role' => 'user',
+                'content' => "Verbose mode is enabled.",
             ];
         }
 
