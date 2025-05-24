@@ -3,22 +3,22 @@
 if (! function_exists('socraites_config')) {
     function socraites_config(string $key, $default = null)
     {
-        static $userConfig = null;
+        static $configs = null;
 
-        if ($userConfig === null) {
-            $userConfig = [];
+        if ($configs === null) {
+            $configs = [];
 
             $path = getcwd() . DIRECTORY_SEPARATOR . '.socraites.json';
 
             if (file_exists($path)) {
                 $json = file_get_contents($path);
-                $userConfig = json_decode($json, true) ?? [];
+                $configs = json_decode($json, true) ?? [];
             }
         }
 
         // 1. Check .socraites.json
-        if (array_key_exists($key, $userConfig)) {
-            return $userConfig[$key];
+        if (array_key_exists($key, $configs)) {
+            return $configs[$key];
         }
 
         // 2. Laravel-style config fallback
@@ -26,7 +26,7 @@ if (! function_exists('socraites_config')) {
             if (function_exists('config') && function_exists('app') && app()->bound('config')) {
                 return config("socraites.$key", $default);
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Laravel not available
         }
 

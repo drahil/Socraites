@@ -135,6 +135,13 @@ class AiService
         return $result['choices'][0]['message']['content'];
     }
 
+    /**
+     * Adds additional information to the payload based on the configuration.
+     *
+     * @param array $payload
+     * @param string|null $framework
+     * @return array
+     */
     private function addInfoFromConfig(array $payload, ?string $framework = null): array
     {
         $framework = $framework ?: socraites_config('framework');

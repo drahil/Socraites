@@ -19,6 +19,13 @@ composer require drahil/socraites
 
 ## Usage
 
+### Setup Socraites
+
+Before using Socraites, run the interactive setup command to configure your environment:
+```bash
+vendor/bin/socraites setup
+```
+
 ### Basic Code Code Review
 ```bash
 vendor/bin/socraites code-review
@@ -31,10 +38,13 @@ vendor/bin/socraites code-review --framework=<framework you are using>
 
 ## Configuration
 
-Socraites can be configured either via:
+Socraites supports multiple configuration methods, with the following priority order (highest to lowest):
 
-- Laravel-style .env file
-- Environment variables
+1. `.socraites.json` file in the project root (created via `setup` command)
+2. Laravel-style configuration (`config/socraites.php`)
+3. Environment variables
+
+
 
 ### Required Configurations
 ```bash

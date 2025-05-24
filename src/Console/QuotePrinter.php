@@ -22,6 +22,5 @@ class QuotePrinter
         $this->output->writeln("<comment>\"" . SocratesQuotes::getRandomQuote() . "\"</comment>");
         $this->output->writeln("<comment>- Socrates</comment>");
         $this->output->writeln('');
-        $this->output->write("  ");
     }
 }

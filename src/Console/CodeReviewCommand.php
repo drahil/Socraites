@@ -5,7 +5,7 @@ namespace drahil\Socraites\Console;
 use drahil\Socraites\Console\Formatters\OutputFormatter;
 use drahil\Socraites\Services\AiService;
 use drahil\Socraites\Services\ContextBuilder;
-use drahil\Socraites\Services\GitService;
+use drahil\Socraites\Services\ChangedFilesService;
 use GuzzleHttp\Exception\GuzzleException;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class CodeReviewCommand extends Command
 {
-    protected GitService $gitService;
+    protected ChangedFilesService $changedFilesService;
     protected AiService $aiService;
     protected array $context;
     protected ContextBuilder $contextBuilder;
@@ -59,8 +59,8 @@ class CodeReviewCommand extends Command
 
         $framework = $input->getOption('framework');
 
-        $changedCode = $this->gitService->getGitDiff();
-        $changedFiles = $this->gitService->getChangedFiles();
+        $changedCode = $this->changedFilesService->getGitDiff();
+        $changedFiles = $this->changedFilesService->getChangedFiles();
 
         $this->quotePrinter->printQuote();
 
@@ -82,7 +82,7 @@ class CodeReviewCommand extends Command
      */
     private function resolveDependencies(): void
     {
-        $this->gitService = new GitService();
+        $this->changedFilesService = new ChangedFilesService();
         $this->formatter = new OutputFormatter([]);
         $this->quotePrinter = new QuotePrinter(new ConsoleOutput());
 
