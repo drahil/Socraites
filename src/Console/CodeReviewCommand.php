@@ -16,15 +16,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class CodeReviewCommand extends Command
 {
-    protected ChangedFilesService $changedFilesService;
-    protected AiService $aiService;
-    protected array $context;
     protected ContextBuilder $contextBuilder;
-    protected OutputFormatter $formatter;
-    protected QuotePrinter $quotePrinter;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ChangedFilesService $changedFilesService,
+        private readonly AiService $aiService,
+        private readonly OutputFormatter $formatter,
+        private readonly QuotePrinter $quotePrinter
+    ) {
         parent::__construct('code-review');
     }
 
@@ -55,8 +54,6 @@ class CodeReviewCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->resolveDependencies();
-
         $framework = $input->getOption('framework');
 
         $changedCode = $this->changedFilesService->getGitDiff();
@@ -73,25 +70,5 @@ class CodeReviewCommand extends Command
         $this->formatter->print();
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * Resolve dependencies for the command.
-     *
-     * @throws RuntimeException
-     */
-    private function resolveDependencies(): void
-    {
-        $this->changedFilesService = new ChangedFilesService();
-        $this->formatter = new OutputFormatter([]);
-        $this->quotePrinter = new QuotePrinter(new ConsoleOutput());
-
-        $token = socraites_config('openai_api_key');
-
-        if (! $token) {
-            throw new RuntimeException('SOCRAITES_OPENAI_API_KEY is not set.');
-        }
-
-        $this->aiService = new AiService($token);
     }
 }
