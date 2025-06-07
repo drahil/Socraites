@@ -37,7 +37,7 @@ class CodeReviewCommand extends Command
                 InputOption::VALUE_OPTIONAL,
                 'Framework that is used in the project'
             )->addOption(
-                'verbose',
+                'verbose-output',
                 null,
                 InputOption::VALUE_NONE,
                 'Enable verbose output'
@@ -93,7 +93,7 @@ class CodeReviewCommand extends Command
     private function getValuesFromInput(InputInterface $input): array
     {
         $framework = $input->getOption('framework') ?: socraites_config('framework');
-        $verbose = $input->getOption('verbose') ?: socraites_config('verbose');
+        $verbose = $input->getOption('verbose-output') ?: socraites_config('verbose');
 
         return [$framework, $verbose];
     }
