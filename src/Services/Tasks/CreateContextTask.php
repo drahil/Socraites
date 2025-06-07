@@ -45,6 +45,8 @@ class CreateContextTask implements ContextTaskInterface
                 continue;
             }
 
+            echo "Adding file to context: $file\n";
+
             $state->addToContext($file, $fileContent);
         }
     }

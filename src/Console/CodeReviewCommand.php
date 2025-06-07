@@ -54,7 +54,8 @@ class CodeReviewCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $framework = $input->getOption('framework');
+        $framework = $input->getOption('framework') ?: socraites_config('framework');
+        $verbose = socraites_config('verbose');
 
         $changedCode = $this->changedFilesService->getGitDiff();
         $changedFiles = $this->changedFilesService->getChangedFiles();
@@ -64,7 +65,15 @@ class CodeReviewCommand extends Command
         $this->contextBuilder = new ContextBuilder($changedFiles);
         $context = $this->contextBuilder->buildContext();
 
-        $codeReview = $this->aiService->getCodeReview($changedCode, $context, $framework);
+        $codeReview = $this->aiService
+            ->withModel(socraites_config('openai_model'))
+            ->withPrompt(socraites_config('code_review_prompt'))
+            ->withUserMessage('Git diff', $changedCode)
+            ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
+            ->withUserMessage('Framework', $framework ?: 'None')
+            ->withUserMessage('Verbose', $verbose ? 'Enabled' : 'Disabled')
+            ->withTemperature(socraites_config('temperature', 0.2))
+            ->getResponse();
 
         $this->formatter->setReview(json_decode($codeReview, true));
         $this->formatter->print();

@@ -9,157 +9,91 @@ class AiService
 {
     protected Client $client;
 
-    public function __construct(protected string $token)
+    public function __construct(protected string $token, protected array $payload = [])
     {
         $this->client = new Client();
     }
 
     /**
-     * Generates a code review based on the provided git diff and context.
+     * Set the model to be used for the AI service.
      *
-     * @param string $gitDiff The git diff to be reviewed.
-     * @param array $context The context for the code review.
-     * @param string|null $framework The framework used in the project (optional).
-     * @return string The generated code review.
-     * @throws GuzzleException
+     * @param string $model The model name, e.g., 'gpt-3.5-turbo'.
+     * @return AiService
      */
-    public function getCodeReview(string $gitDiff, array $context, ?string $framework = null): string
+    public function withModel(string $model): AiService
     {
-        $content = <<<EOT
-            You are an expert code reviewer.
-            
-            Start by reading the provided context carefully. If any file referenced in the diff is missing from the context, clearly mention which files are missing.
-            
-            Assume all code changes are part of a single feature or task. Use the provided framework (if mentioned) to guide your analysis and understanding.
-            
-            Then, review the following Git diff with these steps:
-            
-            1. **File Lists**
-                - List all files changed in the diff.
-                - List all files available in the provided context.
-            
-            2. **Overall Summary**
-                - Summarize the goal of the change based on the diff. Focus on what the feature or fix is trying to achieve.
-            
-            3. **Code Review**
-                - Point out any issues or bugs you notice.
-                - Suggest improvements to code quality, design, or maintainability.
-                - Note adherence (or lack thereof) to best practices and framework conventions.
-            
-            4. **Per-File Feedback**
-                - For each changed file:
-                    - Summarize the changes.
-                    - List issues, suggestions, major issues, and minor issues.
-                    - If a file has large or complex changes, suggest relevant design patterns or refactoring strategies.
-            
-            5. **Commit Message**
-                - Propose a concise and clear Git commit message that captures the intent of the changes.
-            
-            If `verbose mode` is enabled, include more detailed and in-depth suggestions.
-            
-            Your response must be in JSON format and follow this structure:
-            
-            {
-                "files": [
-                    {
-                        "name": "file1.php",
-                        "summary": "Summary of changes",
-                        "issues": [
-                            "Issue 1",
-                            "Issue 2"
-                        ],
-                        "suggestions": [
-                            "Suggestion 1",
-                            "Suggestion 2"
-                        ],
-                        "major_issues": [
-                            "Major issue 1"
-                        ],
-                        "minor_issues": [
-                            "Minor issue 1"
-                        ]
-                    },
-                    {
-                        "name": "file2.php",
-                        "summary": "Summary of changes",
-                        "issues": [
-                            "Issue 1"
-                        ],
-                        "suggestions": [
-                            "Suggestion 1"
-                        ]
-                    }
-                ],
-                "context": [
-                    "file_from_context_1.php",
-                    "file_from_context_2.php"
-                ],
-                "overall_summary": "Overall summary of the changes",
-                "commit_message": "Suggested commit message"
-            }
-            EOT;
-
-
-        $payload = [
-            'model' => 'gpt-4-turbo',
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => $content,
-                ],
-                [
-                    'role' => 'user',
-                    'content' => "Context:\n" . json_encode($context, JSON_PRETTY_PRINT),
-                ],
-                [
-                    'role' => 'user',
-                    'content' => "Git diff:\n" . $gitDiff,
-                ],
-            ],
-            'temperature' => 0.2,
+        $this->payload = [
+            'model' => $model
         ];
 
-        $payload = $this->addInfoFromConfig($payload, $framework);
+        return $this;
+    }
 
+    /**
+     * Add a system prompt to the AI service payload.
+     *
+     * @param string $prompt The system prompt to be added.
+     * @return AiService
+     */
+    public function withPrompt(string $prompt): AiService
+    {
+        $this->payload['messages'][] = [
+            'role' => 'system',
+            'content' => $prompt,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Add a user message to the AI service payload.
+     *
+     * @param string $key The key for the user message.
+     * @param string $message The user message content.
+     * @return AiService
+     */
+    public function withUserMessage(string $key, string $message): AiService
+    {
+        $this->payload['messages'][] = [
+            'role' => 'user',
+            'content' => $key . ': ' . $message,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Set the temperature for the AI response.
+     *
+     * @param float $temperature The temperature value, typically between 0 and 1.
+     * @return AiService
+     */
+    public function withTemperature(float $temperature): AiService
+    {
+        $this->payload['temperature'] = $temperature;
+
+        return $this;
+    }
+
+    /**
+     * Get the AI response based on the provided payload.
+     *
+     * @return string The content of the AI response.
+     * @throws GuzzleException If there is an error with the HTTP request.
+     */
+    public function getResponse(): string
+    {
         $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->token,
                 'Content-Type' => 'application/json',
             ],
-            'json' => $payload,
+            'json' => $this->payload,
         ]);
 
         $body = $response->getBody();
         $result = json_decode($body, true);
 
         return $result['choices'][0]['message']['content'];
-    }
-
-    /**
-     * Adds additional information to the payload based on the configuration.
-     *
-     * @param array $payload
-     * @param string|null $framework
-     * @return array
-     */
-    private function addInfoFromConfig(array $payload, ?string $framework = null): array
-    {
-        $framework = $framework ?: socraites_config('framework');
-        if ($framework) {
-            $payload['messages'][] = [
-                'role' => 'user',
-                'content' => "Framework: $framework",
-            ];
-        }
-
-        $verbose = socraites_config('verbose');
-        if ($verbose) {
-            $payload['messages'][] = [
-                'role' => 'user',
-                'content' => "Verbose mode is enabled.",
-            ];
-        }
-
-        return $payload;
     }
 }
