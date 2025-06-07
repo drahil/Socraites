@@ -15,12 +15,23 @@ class AiService
     }
 
     /**
+     * Initialize the payload for the AI service.
+     *
+     * @return AiService
+     */
+    public function buildPayload(): AiService
+    {
+        $this->payload = [];
+        return $this;
+    }
+
+    /**
      * Set the model to be used for the AI service.
      *
      * @param string $model The model name, e.g., 'gpt-3.5-turbo'.
      * @return AiService
      */
-    public function withModel(string $model): AiService
+    public function usingModel(string $model): AiService
     {
         $this->payload = [
             'model' => $model

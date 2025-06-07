@@ -25,11 +25,19 @@ class OutputFormatter
         $this->configureStyles();
     }
 
+    /**
+     * Set the review data to be printed.
+     *
+     * @param array $review The review data.
+     */
     public function setReview(array $review): void
     {
         $this->review = $review;
     }
 
+    /**
+     * Configure the output styles for the console.
+     */
     private function configureStyles(): void
     {
         $formatter = $this->output->getFormatter();
@@ -44,6 +52,9 @@ class OutputFormatter
         $formatter->setStyle('content', new OutputFormatterStyle('white', null, []));
     }
 
+    /**
+     * Print the formatted output to the console.
+     */
     public function print(): void
     {
         $this->printHeader();
@@ -53,6 +64,9 @@ class OutputFormatter
         $this->printCommitMessage();
     }
 
+    /**
+     * Print the header for the output.
+     */
     private function printHeader(): void
     {
         $this->output->writeln('');
@@ -60,6 +74,9 @@ class OutputFormatter
         $this->output->writeln('');
     }
 
+    /**
+     * Print the overall summary of the code review.
+     */
     private function printOverallSummary(): void
     {
         $summary = $this->review['overall_summary'] ?? '';
@@ -69,6 +86,9 @@ class OutputFormatter
         $this->printSectionFooter();
     }
 
+    /**
+     * Print the files from the context of the code review.
+     */
     private function printContextFiles(): void
     {
         $contextFiles = $this->review['context'] ?? [];
@@ -82,6 +102,9 @@ class OutputFormatter
         $this->printSectionFooter();
     }
 
+    /**
+     * Print the reviews for each file in the code review.
+     */
     private function printFileReviews(): void
     {
         $filesOutputs = $this->review['files'] ?? [];
@@ -90,6 +113,9 @@ class OutputFormatter
         }
     }
 
+    /**
+     * Print the suggested commit message for the code review.
+     */
     private function printCommitMessage(): void
     {
         $commitMessage = $this->review['commit_message'] ?? '';
@@ -99,6 +125,11 @@ class OutputFormatter
         $this->printSectionFooter(true); // Last section
     }
 
+    /**
+     * Render a block of file review information.
+     *
+     * @param array $block The block containing file review data.
+     */
     private function renderFileReviewBlock(array $block): void
     {
         $fileName = $block['name'] ?? '';
@@ -130,6 +161,11 @@ class OutputFormatter
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
     }
 
+    /**
+     * Write indented lines to the output.
+     *
+     * @param string|array $lines The lines to write, can be a single string or an array of strings.
+     */
     private function writeIndentedLines(string|array $lines): void
     {
         foreach ((array) $lines as $line) {
@@ -137,6 +173,11 @@ class OutputFormatter
         }
     }
 
+    /**
+     * Print a line of text with indentation.
+     *
+     * @param string $text The text to print.
+     */
     private function printIndented(string $text): void
     {
         $lines = explode("\n", $text);
@@ -145,6 +186,12 @@ class OutputFormatter
         }
     }
 
+    /**
+     * Print a section header with a title and icon.
+     *
+     * @param string $type The type of section (e.g., 'summary', 'files').
+     * @param string $title The title of the section.
+     */
     private function printSectionHeader(string $type, string $title): void
     {
         $this->output->writeln('');
@@ -152,6 +199,11 @@ class OutputFormatter
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
     }
 
+    /**
+     * Print the footer for a section.
+     *
+     * @param bool $isLast Whether this is the last section to be printed.
+     */
     private function printSectionFooter(bool $isLast = false): void
     {
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");

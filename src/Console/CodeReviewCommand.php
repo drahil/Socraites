@@ -7,11 +7,9 @@ use drahil\Socraites\Services\AiService;
 use drahil\Socraites\Services\ContextBuilder;
 use drahil\Socraites\Services\ChangedFilesService;
 use GuzzleHttp\Exception\GuzzleException;
-use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class CodeReviewCommand extends Command
@@ -38,6 +36,11 @@ class CodeReviewCommand extends Command
                 null,
                 InputOption::VALUE_OPTIONAL,
                 'Framework that is used in the project'
+            )->addOption(
+                'verbose',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable verbose output'
             );
     }
 
@@ -54,8 +57,7 @@ class CodeReviewCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $framework = $input->getOption('framework') ?: socraites_config('framework');
-        $verbose = socraites_config('verbose');
+        [$framework, $verbose] = $this->getValuesFromInput($input);
 
         $changedCode = $this->changedFilesService->getGitDiff();
         $changedFiles = $this->changedFilesService->getChangedFiles();
@@ -66,7 +68,8 @@ class CodeReviewCommand extends Command
         $context = $this->contextBuilder->buildContext();
 
         $codeReview = $this->aiService
-            ->withModel(socraites_config('openai_model'))
+            ->buildPayload()
+            ->usingModel(socraites_config('openai_model'))
             ->withPrompt(socraites_config('code_review_prompt'))
             ->withUserMessage('Git diff', $changedCode)
             ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
@@ -79,5 +82,19 @@ class CodeReviewCommand extends Command
         $this->formatter->print();
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Get the framework and verbose options from the input.
+     *
+     * @param InputInterface $input
+     * @return array
+     */
+    private function getValuesFromInput(InputInterface $input): array
+    {
+        $framework = $input->getOption('framework') ?: socraites_config('framework');
+        $verbose = $input->getOption('verbose') ?: socraites_config('verbose');
+
+        return [$framework, $verbose];
     }
 }
