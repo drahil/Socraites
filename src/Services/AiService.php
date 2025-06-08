@@ -9,8 +9,12 @@ class AiService
 {
     protected Client $client;
 
-    public function __construct(protected string $token, protected array $payload = [])
-    {
+    public function __construct(
+        protected string $token,
+        protected array $payload = [],
+        protected string $aiResponse = '',
+        protected array $previousConversation = []
+    ) {
         $this->client = new Client();
     }
 
@@ -22,6 +26,14 @@ class AiService
     public function buildPayload(): AiService
     {
         $this->payload = [];
+
+        if (! empty($this->previousConversation)) {
+            $this->payload['messages'][] = [
+                'role' => 'user',
+                'content' => 'Previous conversation: ' . json_encode($this->previousConversation, JSON_PRETTY_PRINT),
+            ];
+        }
+
         return $this;
     }
 
@@ -33,9 +45,7 @@ class AiService
      */
     public function usingModel(string $model): AiService
     {
-        $this->payload = [
-            'model' => $model
-        ];
+        $this->payload['model'] = $model;
 
         return $this;
     }
@@ -105,6 +115,23 @@ class AiService
         $body = $response->getBody();
         $result = json_decode($body, true);
 
-        return $result['choices'][0]['message']['content'];
+        $this->aiResponse = $result['choices'][0]['message']['content'] ?? '';
+
+        return $this->aiResponse;
+    }
+
+    /**
+     * Get the conversation including user messages and AI response.
+     *
+     * @return AiService
+     */
+    public function withPreviousConversation(): AiService
+    {
+        $this->previousConversation = [
+            'user_messages' => $this->payload['messages'] ?? [],
+            'ai_response' => $this->aiResponse,
+        ];
+
+        return $this;
     }
 }

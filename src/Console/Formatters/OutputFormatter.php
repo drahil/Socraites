@@ -19,20 +19,20 @@ class OutputFormatter
         'commit' => '💬',
     ];
 
-    public function __construct(protected array $review)
+    public function __construct(protected array $response)
     {
         $this->output = new ConsoleOutput();
         $this->configureStyles();
     }
 
     /**
-     * Set the review data to be printed.
+     * Set the response data to be printed.
      *
-     * @param array $review The review data.
+     * @param array $response
      */
-    public function setReview(array $review): void
+    public function setResponse(array $response): void
     {
-        $this->review = $review;
+        $this->response = $response;
     }
 
     /**
@@ -79,7 +79,7 @@ class OutputFormatter
      */
     private function printOverallSummary(): void
     {
-        $summary = $this->review['overall_summary'] ?? '';
+        $summary = $this->response['overall_summary'] ?? '';
 
         $this->printSectionHeader('summary', 'Overall Summary');
         $this->printIndented($summary);
@@ -91,7 +91,7 @@ class OutputFormatter
      */
     private function printContextFiles(): void
     {
-        $contextFiles = $this->review['context'] ?? [];
+        $contextFiles = $this->response['context'] ?? [];
 
         $this->printSectionHeader('files', 'Files from context');
 
@@ -107,7 +107,7 @@ class OutputFormatter
      */
     private function printFileReviews(): void
     {
-        $filesOutputs = $this->review['files'] ?? [];
+        $filesOutputs = $this->response['files'] ?? [];
         foreach ($filesOutputs as $block) {
             $this->renderFileReviewBlock($block);
         }
@@ -118,7 +118,7 @@ class OutputFormatter
      */
     private function printCommitMessage(): void
     {
-        $commitMessage = $this->review['commit_message'] ?? '';
+        $commitMessage = $this->response['commit_message'] ?? '';
 
         $this->printSectionHeader('commit', 'Suggested Commit Message');
         $this->printIndented($commitMessage);
@@ -209,6 +209,46 @@ class OutputFormatter
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
         if (! $isLast) {
             $this->output->writeln('');
+        }
+    }
+
+    /**
+     * Print a simple answer from the AI response.
+     */
+    public function printSimpleAnswer(): void
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  <title>AI Response:</>');
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+
+        $this->printArray($this->response, 2);
+
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+        $this->output->writeln('');
+    }
+
+    /**
+     * Print an array in a formatted way.
+     *
+     * @param array $data The data to print.
+     * @param int $indent The indentation level.
+     */
+    protected function printArray(array $data, int $indent = 0): void
+    {
+        $prefix = str_repeat(' ', $indent);
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                if (is_numeric($key)) {
+                    $this->output->writeln("{$prefix}•");
+                } else {
+                    $this->output->writeln("{$prefix}<info>" . ucfirst($key) . '</info>:');
+                }
+
+                $this->printArray($value, $indent + 2);
+            } else {
+                $this->output->writeln("{$prefix}<comment>" . ucfirst($key) . "</comment>: {$value}");
+            }
         }
     }
 }

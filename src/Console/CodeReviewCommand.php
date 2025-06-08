@@ -11,6 +11,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class CodeReviewCommand extends Command
 {
@@ -73,13 +74,41 @@ class CodeReviewCommand extends Command
             ->withPrompt(socraites_config('code_review_prompt'))
             ->withUserMessage('Git diff', $changedCode)
             ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
-            ->withUserMessage('Framework', $framework ?: 'None')
-            ->withUserMessage('Verbose', $verbose ? 'Enabled' : 'Disabled')
-            ->withTemperature(socraites_config('temperature', 0.2))
+            ->withUserMessage('Framework', $framework)
+            ->withUserMessage('Verbose', $verbose)
+            ->withTemperature(socraites_config('temperature', 0,2))
             ->getResponse();
 
-        $this->formatter->setReview(json_decode($codeReview, true));
+        $this->formatter->setResponse(json_decode($codeReview, true));
         $this->formatter->print();
+
+        $io = new SymfonyStyle($input, $output);
+
+        $questionForAi = $io->ask(
+            'Do you have a question about the code review?',
+            'no',
+            function ($answer) {
+                return strtolower($answer);
+            }
+        );
+
+        if ($questionForAi === 'no' || $questionForAi === 'n') {
+            $io->success('Thank you for using Socraites AI Code Review!');
+            return Command::SUCCESS;
+        }
+
+        $aiAnswer = $this->aiService
+            ->withPreviousConversation()
+            ->buildPayload()
+            ->usingModel(socraites_config('openai_model'))
+            ->withPrompt('Using the information from previous_conversation array, answer the question in the form of an array.')
+            ->withUserMessage('Question', $questionForAi)
+            ->withTemperature(socraites_config('temperature', 0,2))
+            ->getResponse();
+
+
+        $this->formatter->setResponse(json_decode($aiAnswer, true));
+        $this->formatter->printSimpleAnswer();
 
         return Command::SUCCESS;
     }
@@ -93,7 +122,7 @@ class CodeReviewCommand extends Command
     private function getValuesFromInput(InputInterface $input): array
     {
         $framework = $input->getOption('framework') ?: socraites_config('framework');
-        $verbose = $input->getOption('verbose-output') ?: socraites_config('verbose');
+        $verbose = $input->getOption('verbose-output') ?: socraites_config('verbose_answer');
 
         return [$framework, $verbose];
     }
