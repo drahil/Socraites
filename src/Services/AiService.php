@@ -112,9 +112,8 @@ class AiService
             'json' => $this->payload,
         ]);
 
-        $body = $response->getBody();
-        $result = json_decode($body, true);
-
+        $result = json_decode($response->getBody(), true);
+        
         $this->aiResponse = $result['choices'][0]['message']['content'] ?? '';
 
         return $this->aiResponse;

@@ -84,31 +84,31 @@ class CodeReviewCommand extends Command
 
         $io = new SymfonyStyle($input, $output);
 
-        $questionForAi = $io->ask(
-            'Do you have a question about the code review?',
-            'no',
-            function ($answer) {
-                return strtolower($answer);
-            }
-        );
+        while (true) {
+            $questionForAi = $io->ask(
+                'Do you have a question about the code review?',
+                'no',
+                fn($answer) => strtolower($answer)
+            );
 
-        if ($questionForAi === 'no' || $questionForAi === 'n') {
-            $io->success('Thank you for using Socraites AI Code Review!');
-            return Command::SUCCESS;
+            if (in_array($questionForAi, ['no', 'n'], true)) {
+                break;
+            }
+
+            $aiAnswer = $this->aiService
+                ->withPreviousConversation()
+                ->buildPayload()
+                ->usingModel(socraites_config('openai_model'))
+                ->withPrompt(socraites_config('question_prompt'))
+                ->withUserMessage('Question', $questionForAi)
+                ->withTemperature(socraites_config('temperature', 0.2))
+                ->getResponse();
+
+            $this->formatter->setResponse(json_decode($aiAnswer, true));
+            $this->formatter->printSimpleAnswer();
         }
 
-        $aiAnswer = $this->aiService
-            ->withPreviousConversation()
-            ->buildPayload()
-            ->usingModel(socraites_config('openai_model'))
-            ->withPrompt('Using the information from previous_conversation array, answer the question in the form of an array.')
-            ->withUserMessage('Question', $questionForAi)
-            ->withTemperature(socraites_config('temperature', 0,2))
-            ->getResponse();
-
-
-        $this->formatter->setResponse(json_decode($aiAnswer, true));
-        $this->formatter->printSimpleAnswer();
+        $this->formatter->printThankYouMessage();
 
         return Command::SUCCESS;
     }

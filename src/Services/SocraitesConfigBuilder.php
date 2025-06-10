@@ -29,6 +29,7 @@ class SocraitesConfigBuilder
             'code_review_prompt' => $this->askCodeReviewPrompt(),
             'openai_model' => $this->askOpenAiModel(),
             'openai_temperature' => $this->askOpenAiTemperature(),
+            'question_prompt' => $this->askQuestionPrompt()
         ];
 
         file_put_contents('.socraites.json', json_encode($socraitesJson, JSON_PRETTY_PRINT));
@@ -232,6 +233,26 @@ class SocraitesConfigBuilder
                     throw new InvalidArgumentException('The OpenAI temperature must be a number between 0 and 1.');
                 }
                 return (float)$value;
+            }
+        );
+    }
+
+    /**
+     * Ask the user for the prompt to ask questions about the code review.
+     *
+     * @return string The question prompt.
+     */
+    private function askQuestionPrompt(): string
+    {
+        return $this->io->ask(
+            'Enter the prompt for asking questions about the code review',
+            'Using the information from previous_conversation array, answer the question strictly in valid JSON format.'
+                .  'Do not include any extra text or explanation. Only return a valid JSON object or array',
+            function ($value) {
+                if (empty($value)) {
+                    throw new InvalidArgumentException('The question prompt cannot be empty.');
+                }
+                return $value;
             }
         );
     }

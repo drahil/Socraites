@@ -36,6 +36,72 @@ class OutputFormatter
     }
 
     /**
+     * Print a simple answer from the AI response.
+     */
+    public function printSimpleAnswer(): void
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  <title>AI Response:</>');
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+
+        $this->printArray($this->response, 2);
+
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+        $this->output->writeln('');
+    }
+
+    /**
+     * Print a thank you message at the end of the code review.
+     *
+     * @return void
+     */
+    public function printThankYouMessage(): void
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  <title>Thank you for using Socraites!</>');
+        $this->output->writeln('  <content>We hope you found the code review helpful.</>');
+        $this->output->writeln('  <content>Happy coding!</>');
+        $this->output->writeln('');
+    }
+
+    /**
+     * Print the formatted output to the console.
+     */
+    public function print(): void
+    {
+        $this->printHeader();
+        $this->printOverallSummary();
+        $this->printContextFiles();
+        $this->printFileReviews();
+        $this->printCommitMessage();
+    }
+
+    /**
+     * Print an array in a formatted way.
+     *
+     * @param array $data The data to print.
+     * @param int $indent The indentation level.
+     */
+    protected function printArray(array $data, int $indent = 0): void
+    {
+        $prefix = str_repeat(' ', $indent);
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                if (is_numeric($key)) {
+                    $this->output->writeln("{$prefix}•");
+                } else {
+                    $this->output->writeln("{$prefix}<info>" . ucfirst($key) . '</info>:');
+                }
+
+                $this->printArray($value, $indent + 2);
+            } else {
+                $this->output->writeln("{$prefix}<comment>" . ucfirst($key) . "</comment>: {$value}");
+            }
+        }
+    }
+
+    /**
      * Configure the output styles for the console.
      */
     private function configureStyles(): void
@@ -50,18 +116,6 @@ class OutputFormatter
         $formatter->setStyle('commit', new OutputFormatterStyle('green', null, ['bold']));
         $formatter->setStyle('border', new OutputFormatterStyle('white', null, []));
         $formatter->setStyle('content', new OutputFormatterStyle('white', null, []));
-    }
-
-    /**
-     * Print the formatted output to the console.
-     */
-    public function print(): void
-    {
-        $this->printHeader();
-        $this->printOverallSummary();
-        $this->printContextFiles();
-        $this->printFileReviews();
-        $this->printCommitMessage();
     }
 
     /**
@@ -209,46 +263,6 @@ class OutputFormatter
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
         if (! $isLast) {
             $this->output->writeln('');
-        }
-    }
-
-    /**
-     * Print a simple answer from the AI response.
-     */
-    public function printSimpleAnswer(): void
-    {
-        $this->output->writeln('');
-        $this->output->writeln('  <title>AI Response:</>');
-        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
-
-        $this->printArray($this->response, 2);
-
-        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
-        $this->output->writeln('');
-    }
-
-    /**
-     * Print an array in a formatted way.
-     *
-     * @param array $data The data to print.
-     * @param int $indent The indentation level.
-     */
-    protected function printArray(array $data, int $indent = 0): void
-    {
-        $prefix = str_repeat(' ', $indent);
-
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                if (is_numeric($key)) {
-                    $this->output->writeln("{$prefix}•");
-                } else {
-                    $this->output->writeln("{$prefix}<info>" . ucfirst($key) . '</info>:');
-                }
-
-                $this->printArray($value, $indent + 2);
-            } else {
-                $this->output->writeln("{$prefix}<comment>" . ucfirst($key) . "</comment>: {$value}");
-            }
         }
     }
 }
