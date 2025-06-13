@@ -89,14 +89,14 @@ class OutputFormatter
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 if (is_numeric($key)) {
-                    $this->output->writeln("{$prefix}•");
+                    $this->output->writeln("{$prefix} -- ");
                 } else {
-                    $this->output->writeln("{$prefix}<info>" . ucfirst($key) . '</info>:');
+                    $this->output->writeln("{$prefix}<info>" . snake_case_to_sentence_style($key) . '</info>:');
                 }
 
                 $this->printArray($value, $indent + 2);
             } else {
-                $this->output->writeln("{$prefix}<comment>" . ucfirst($key) . "</comment>: {$value}");
+                $this->output->writeln("{$prefix}<comment>" . snake_case_to_sentence_style($key) . "</comment>: {$value}");
             }
         }
     }

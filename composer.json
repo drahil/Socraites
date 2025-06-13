@@ -6,7 +6,8 @@
             "Tests\\": "tests/"
         },
         "files": [
-            "src/Helpers/socraites_configs.php"
+            "src/Helpers/socraites_configs.php",
+            "src/Helpers/snake_case_to_sentence_style.php"
         ]
     },
     "bin": [
