@@ -94,7 +94,7 @@ class CodeReviewCommand extends Command
                 ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
                 ->withUserMessage('Framework', $framework)
                 ->withUserMessage('Verbose', $verbose)
-                ->withTemperature(socraites_config('temperature', 0,2))
+                ->withTemperature(socraites_config('temperature', 0.2))
                 ->getResponse();
         } catch (Throwable $e) {
             $this->formatter->printError();
