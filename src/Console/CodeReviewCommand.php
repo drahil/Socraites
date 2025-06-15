@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 class CodeReviewCommand extends Command
 {
@@ -68,49 +69,40 @@ class CodeReviewCommand extends Command
         $this->contextBuilder = new ContextBuilder($changedFiles);
         $context = $this->contextBuilder->buildContext();
 
-        $codeReview = $this->aiService
-            ->buildPayload()
-            ->usingModel(socraites_config('openai_model'))
-            ->withPrompt(socraites_config('code_review_prompt'))
-            ->withUserMessage('Git diff', $changedCode)
-            ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
-            ->withUserMessage('Framework', $framework)
-            ->withUserMessage('Verbose', $verbose)
-            ->withTemperature(socraites_config('temperature', 0,2))
-            ->getResponse();
-
-        $this->formatter->setResponse(json_decode($codeReview, true));
-        $this->formatter->print();
+        $this->getCodeReview($changedCode, $context, $framework, $verbose);
 
         $io = new SymfonyStyle($input, $output);
-
-        while (true) {
-            $questionForAi = $io->ask(
-                'Do you have a question about the code review?',
-                'no',
-                fn($answer) => strtolower($answer)
-            );
-
-            if (in_array($questionForAi, ['no', 'n'], true)) {
-                break;
-            }
-
-            $aiAnswer = $this->aiService
-                ->withPreviousConversation()
-                ->buildPayload()
-                ->usingModel(socraites_config('openai_model'))
-                ->withPrompt(socraites_config('question_prompt'))
-                ->withUserMessage('Question', $questionForAi)
-                ->withTemperature(socraites_config('temperature', 0.2))
-                ->getResponse();
-
-            $this->formatter->setResponse(json_decode($aiAnswer, true));
-            $this->formatter->printSimpleAnswer();
-        }
+        $this->continueConversation($io);
 
         $this->formatter->printThankYouMessage();
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Get the code review from the AI service based on the changed code and context.
+     *
+     */
+    private function getCodeReview($changedCode, $context, $framework, $verbose): void
+    {
+        try {
+            $codeReview = $this->aiService
+                ->buildPayload()
+                ->usingModel(socraites_config('openai_model'))
+                ->withPrompt(socraites_config('code_review_prompt'))
+                ->withUserMessage('Git diff', $changedCode)
+                ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
+                ->withUserMessage('Framework', $framework)
+                ->withUserMessage('Verbose', $verbose)
+                ->withTemperature(socraites_config('temperature', 0,2))
+                ->getResponse();
+        } catch (Throwable $e) {
+            $this->formatter->printError();
+            return;
+        }
+
+        $this->formatter->setResponse(json_decode($codeReview, true));
+        $this->formatter->print();
     }
 
     /**
@@ -125,5 +117,42 @@ class CodeReviewCommand extends Command
         $verbose = $input->getOption('verbose-output') ?: socraites_config('verbose_answer');
 
         return [$framework, $verbose];
+    }
+
+    /**
+     * Continues the conversation with the AI after the initial code review.
+     *
+     * @throws GuzzleException
+     */
+    private function continueConversation($io): void
+    {
+        while (true) {
+            $questionForAi = $io->ask(
+                'Do you have a question about the code review?',
+                'no',
+                fn($answer) => strtolower($answer)
+            );
+
+            if (in_array($questionForAi, ['no', 'n'], true)) {
+                break;
+            }
+
+            try {
+                $aiAnswer = $this->aiService
+                    ->withPreviousConversation()
+                    ->buildPayload()
+                    ->usingModel(socraites_config('openai_model'))
+                    ->withPrompt(socraites_config('question_prompt'))
+                    ->withUserMessage('Question', $questionForAi)
+                    ->withTemperature(socraites_config('temperature', 0.2))
+                    ->getResponse();
+            } catch (Throwable $e) {
+                $this->formatter->printError();
+                break;
+            }
+
+            $this->formatter->setResponse(json_decode($aiAnswer, true));
+            $this->formatter->printSimpleAnswer();
+        }
     }
 }

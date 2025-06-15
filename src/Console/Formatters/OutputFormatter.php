@@ -77,6 +77,20 @@ class OutputFormatter
     }
 
     /**
+     * Print an error message when there is an issue with the AI response.
+     */
+    public function printError(): void
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  <title>Error:</>');
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+        $this->output->writeln('  <content>There was an error processing your request.</>');
+        $this->output->writeln('  <content>Please check your input and try again.</>');
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+        $this->output->writeln('');
+    }
+
+    /**
      * Print an array in a formatted way.
      *
      * @param array $data The data to print.
