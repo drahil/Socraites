@@ -2,10 +2,12 @@
     "name": "drahil/socraites",
     "autoload": {
         "psr-4": {
-            "drahil\\Socraites\\": "src/"
+            "drahil\\Socraites\\": "src/",
+            "Tests\\": "tests/"
         },
         "files": [
-            "src/Helpers/socraites_configs.php"
+            "src/Helpers/socraites_configs.php",
+            "src/Helpers/snake_case_to_sentence_style.php"
         ]
     },
     "bin": [
@@ -24,6 +26,10 @@
       "ext-json": "*",
         "guzzlehttp/guzzle": "^7.0"
     },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "pestphp/pest": "^3.8"
+    },
     "extra": {
         "laravel": {
             "providers": [
@@ -31,5 +37,10 @@
             ]
         }
     },
-    "license": "MIT"
+    "license": "MIT",
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
 }

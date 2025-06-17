@@ -8,8 +8,8 @@ use drahil\Socraites\Services\ContextState;
 class CreateContextTask implements ContextTaskInterface
 {
     public function __construct(
-        private ClassMapService $classMapService,
-        private array $namespaceFilters = []
+        private readonly ClassMapService $classMapService,
+        private readonly array $namespaceFilters = []
     ) {}
 
     /**
@@ -38,12 +38,14 @@ class CreateContextTask implements ContextTaskInterface
             $fileContent = file_get_contents($filePath);
             $fileSize = strlen($fileContent);
 
-            $maxContextSize = socraites_config('max_context_size');
+            $maxContextSize = socraites_config('maximum_context_size');
 
             if ($state->totalSize + $fileSize > $maxContextSize) {
                 echo "Context size limit reached. Skipping file: $file\n";
                 continue;
             }
+
+            echo "Adding file to context: $file\n";
 
             $state->addToContext($file, $fileContent);
         }

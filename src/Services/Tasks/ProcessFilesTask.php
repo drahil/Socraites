@@ -9,7 +9,7 @@ use Exception;
 class ProcessFilesTask implements ContextTaskInterface
 {
     public function __construct(
-        private FileParser $fileParser
+        private readonly FileParser $fileParser
     ) {}
 
     /**

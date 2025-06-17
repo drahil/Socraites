@@ -19,32 +19,35 @@ composer require drahil/socraites
 
 ## Usage
 
+### Setup Socraites
+
+Before using Socraites, run the interactive setup command to configure your environment:
+```bash
+vendor/bin/socraites setup
+```
+
 ### Basic Code Code Review
 ```bash
 vendor/bin/socraites code-review
 ```
 
-### Framework-Specific Code Review
-```bash
-vendor/bin/socraites code-review --framework=<framework you are using>
-```
+### Options for Code Review
+- `--framework=<framework>`: Specify a framework for tailored analysis (e.g., `laravel`, `symfony`, etc.)
+- `--verbose-output`: Enable verbose output for detailed logs
 
 ## Configuration
 
-Socraites can be configured either via:
+Socraites supports multiple configuration methods, with the following priority order (highest to lowest):
 
-- Laravel-style .env file
-- Environment variables
+1. `.socraites.json` file in the project root (created via `setup` command)
+2. Laravel-style configuration (`config/socraites.php`)
+3. Environment variables
+
+
 
 ### Required Configurations
 ```bash
 export SOCRAITES_OPENAI_API_KEY=your_api_key_here
-```
-### Optionial Configurations
-```bash
-export SOCRAITES_SCORES_IMPORT=5
-export SOCRAITES_SCORES_EXTENDS=10
-export SOCRAITES_MAX_CONTEXT_SIZE=102400
 ```
 
 ## How It Works

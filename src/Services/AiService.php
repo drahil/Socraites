@@ -9,125 +9,128 @@ class AiService
 {
     protected Client $client;
 
-    public function __construct(protected string $token)
-    {
+    public function __construct(
+        protected string $token,
+        protected array $payload = [],
+        protected string $aiResponse = '',
+        protected array $previousConversation = []
+    ) {
         $this->client = new Client();
     }
 
     /**
-     * Generates a code review based on the provided git diff and context.
+     * Initialize the payload for the AI service.
      *
-     * @param string $gitDiff The git diff to be reviewed.
-     * @param array $context The context for the code review.
-     * @param string|null $framework The framework used in the project (optional).
-     * @return string The generated code review.
-     * @throws GuzzleException
+     * @return AiService
      */
-    public function getCodeReview(string $gitDiff, array $context, ?string $framework = null): string
+    public function buildPayload(): AiService
     {
-        $content = <<<EOT
-            You are an expert code reviewer.
-            
-            First, carefully read the provided context. If any file context is missing, mention which ones.
-            Try to analyze all code changes as a part of one feature.
-            If framework is provided, use it to understand the code better. In your response make sure to mention the framework.
-            
-            Then, review the following git diff based on the context:
-            - List all files that are changed.
-            - List all files from the context.
-            - Summarize the overall goal of the changes based on the diff.
-            
-            Next, review the code in the diff:
-            - Identify and explain any issues you find.
-            - Suggest improvements and highlight potential bugs.
-            - Comment on adherence to best practices.
-            
-            Provide comments per file:
-            - If a file has large changes, suggest appropriate design patterns or refactoring strategies.
-            
-            At the end, suggest a suitable Git commit message summarizing the intent of the changes. Keep it short and clear.
-            Be concise and structured in your feedback. Do not go into too much detail. Pay special attention to design patterns and best practices.
-            In suggestions, feel free to add what you may think is the best way to do it.
-            
-            Your response should be JSON. This is the draft:
-            {
-                "files": {
-                    [
-                        "name": "file1.php",
-                        "summary": "Summary of changes",
-                        "issues": [
-                            "Issue 1",
-                            "Issue 2"
-                        ],
-                        "suggestions": [
-                            "Suggestion 1",
-                            "Suggestion 2"
-                        ],
-                        "major_issues": [
-                            "Major issue 1"
-                        ],
-                        "minor_issues": [
-                            "Minor issue 1"
-                        ]
-                    ],
-                    [
-                        "name": "file2.php",
-                        "summary": "Summary of changes",
-                        "issues": [
-                            "Issue 1"
-                        ],
-                        "suggestions": [
-                            "Suggestion 1"
-                        ]
-                    ]
-                },
-                "context": [
-                    "file_from_context_1.php",
-                    "file_from_context_2.php"
-                ],
-                "overall_summary": "Overall summary of the changes",
-                "commit_message": "Suggested commit message"
-            }
-            
-            EOT;
+        $this->payload = [];
 
-        $payload = [
-            'model' => 'gpt-4-turbo',
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => $content,
-                ],
-                [
-                    'role' => 'user',
-                    'content' => "Context:\n" . json_encode($context, JSON_PRETTY_PRINT),
-                ],
-                [
-                    'role' => 'user',
-                    'content' => "Git diff:\n" . $gitDiff,
-                ],
-            ],
-            'temperature' => 0.2,
-        ];
-
-        if ($framework) {
-            $payload['messages'][] = [
+        if (! empty($this->previousConversation)) {
+            $this->payload['messages'][] = [
                 'role' => 'user',
-                'content' => "Framework:\n" . $framework,
+                'content' => 'Previous conversation: ' . json_encode($this->previousConversation, JSON_PRETTY_PRINT),
             ];
         }
 
+        return $this;
+    }
+
+    /**
+     * Set the model to be used for the AI service.
+     *
+     * @param string $model The model name, e.g., 'gpt-3.5-turbo'.
+     * @return AiService
+     */
+    public function usingModel(string $model): AiService
+    {
+        $this->payload['model'] = $model;
+
+        return $this;
+    }
+
+    /**
+     * Add a system prompt to the AI service payload.
+     *
+     * @param string $prompt The system prompt to be added.
+     * @return AiService
+     */
+    public function withPrompt(string $prompt): AiService
+    {
+        $this->payload['messages'][] = [
+            'role' => 'system',
+            'content' => $prompt,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Add a user message to the AI service payload.
+     *
+     * @param string $key The key for the user message.
+     * @param string $message The user message content.
+     * @return AiService
+     */
+    public function withUserMessage(string $key, string $message): AiService
+    {
+        $this->payload['messages'][] = [
+            'role' => 'user',
+            'content' => $key . ': ' . $message,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Set the temperature for the AI response.
+     *
+     * @param float $temperature The temperature value, typically between 0 and 1.
+     * @return AiService
+     */
+    public function withTemperature(float $temperature): AiService
+    {
+        $this->payload['temperature'] = $temperature;
+
+        return $this;
+    }
+
+    /**
+     * Get the AI response based on the provided payload.
+     *
+     * @return string The content of the AI response.
+     * @throws GuzzleException If there is an error with the HTTP request.
+     */
+    public function getResponse(): string
+    {
         $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->token,
                 'Content-Type' => 'application/json',
             ],
-            'json' => $payload,
+            'json' => $this->payload,
         ]);
 
-        $body = $response->getBody();
-        $result = json_decode($body, true);
+        $result = json_decode($response->getBody(), true);
+        
+        $this->aiResponse = $result['choices'][0]['message']['content'] ?? '';
 
-        return $result['choices'][0]['message']['content'];
+        return $this->aiResponse;
+    }
+
+    /**
+     * Get the conversation including user messages and AI response.
+     *
+     * @return AiService
+     */
+    public function withPreviousConversation(): AiService
+    {
+        $this->previousConversation = [
+            'user_messages' => $this->payload['messages'] ?? [],
+            'ai_response' => $this->aiResponse,
+        ];
+
+        return $this;
     }
 }

@@ -19,22 +19,109 @@ class OutputFormatter
         'commit' => '💬',
     ];
 
-    public function __construct(protected array $review)
+    public function __construct(protected array $response)
     {
         $this->output = new ConsoleOutput();
         $this->configureStyles();
     }
 
-    public function setReview(array $review): void
+    /**
+     * Set the response data to be printed.
+     *
+     * @param array $response
+     */
+    public function setResponse(array $response): void
     {
-        $this->review = $review;
+        $this->response = $response;
     }
 
+    /**
+     * Print a simple answer from the AI response.
+     */
+    public function printSimpleAnswer(): void
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  <title>AI Response:</>');
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+
+        $this->printArray($this->response, 2);
+
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+        $this->output->writeln('');
+    }
+
+    /**
+     * Print a thank you message at the end of the code review.
+     *
+     * @return void
+     */
+    public function printThankYouMessage(): void
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  <title>Thank you for using Socraites!</>');
+        $this->output->writeln('  <content>We hope you found the code review helpful.</>');
+        $this->output->writeln('  <content>Happy coding!</>');
+        $this->output->writeln('');
+    }
+
+    /**
+     * Print the formatted output to the console.
+     */
+    public function print(): void
+    {
+        $this->printHeader();
+        $this->printOverallSummary();
+        $this->printContextFiles();
+        $this->printFileReviews();
+        $this->printCommitMessage();
+    }
+
+    /**
+     * Print an error message when there is an issue with the AI response.
+     */
+    public function printError(): void
+    {
+        $this->output->writeln('');
+        $this->output->writeln('  <title>Error:</>');
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+        $this->output->writeln('  <content>There was an error processing your request.</>');
+        $this->output->writeln('  <content>Please check your input and try again.</>');
+        $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
+        $this->output->writeln('');
+    }
+
+    /**
+     * Print an array in a formatted way.
+     *
+     * @param array $data The data to print.
+     * @param int $indent The indentation level.
+     */
+    protected function printArray(array $data, int $indent = 0): void
+    {
+        $prefix = str_repeat(' ', $indent);
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                if (is_numeric($key)) {
+                    $this->output->writeln("{$prefix} -- ");
+                } else {
+                    $this->output->writeln("{$prefix}<info>" . snake_case_to_sentence_style($key) . '</info>:');
+                }
+
+                $this->printArray($value, $indent + 2);
+            } else {
+                $this->output->writeln("{$prefix}<comment>" . snake_case_to_sentence_style($key) . "</comment>: {$value}");
+            }
+        }
+    }
+
+    /**
+     * Configure the output styles for the console.
+     */
     private function configureStyles(): void
     {
         $formatter = $this->output->getFormatter();
 
-        // Define custom styles for different sections
         $formatter->setStyle('title', new OutputFormatterStyle('green', null, ['bold']));
         $formatter->setStyle('file', new OutputFormatterStyle('blue', null, ['bold']));
         $formatter->setStyle('major', new OutputFormatterStyle('red', null, ['bold']));
@@ -45,15 +132,9 @@ class OutputFormatter
         $formatter->setStyle('content', new OutputFormatterStyle('white', null, []));
     }
 
-    public function print(): void
-    {
-        $this->printHeader();
-        $this->printOverallSummary();
-        $this->printContextFiles();
-        $this->printFileReviews();
-        $this->printCommitMessage();
-    }
-
+    /**
+     * Print the header for the output.
+     */
     private function printHeader(): void
     {
         $this->output->writeln('');
@@ -61,18 +142,24 @@ class OutputFormatter
         $this->output->writeln('');
     }
 
+    /**
+     * Print the overall summary of the code review.
+     */
     private function printOverallSummary(): void
     {
-        $summary = $this->review['overall_summary'] ?? '';
+        $summary = $this->response['overall_summary'] ?? '';
 
         $this->printSectionHeader('summary', 'Overall Summary');
         $this->printIndented($summary);
         $this->printSectionFooter();
     }
 
+    /**
+     * Print the files from the context of the code review.
+     */
     private function printContextFiles(): void
     {
-        $contextFiles = $this->review['context'] ?? [];
+        $contextFiles = $this->response['context'] ?? [];
 
         $this->printSectionHeader('files', 'Files from context');
 
@@ -83,23 +170,34 @@ class OutputFormatter
         $this->printSectionFooter();
     }
 
+    /**
+     * Print the reviews for each file in the code review.
+     */
     private function printFileReviews(): void
     {
-        $filesOutputs = $this->review['files'] ?? [];
+        $filesOutputs = $this->response['files'] ?? [];
         foreach ($filesOutputs as $block) {
             $this->renderFileReviewBlock($block);
         }
     }
 
+    /**
+     * Print the suggested commit message for the code review.
+     */
     private function printCommitMessage(): void
     {
-        $commitMessage = $this->review['commit_message'] ?? '';
+        $commitMessage = $this->response['commit_message'] ?? '';
 
         $this->printSectionHeader('commit', 'Suggested Commit Message');
         $this->printIndented($commitMessage);
         $this->printSectionFooter(true); // Last section
     }
 
+    /**
+     * Render a block of file review information.
+     *
+     * @param array $block The block containing file review data.
+     */
     private function renderFileReviewBlock(array $block): void
     {
         $fileName = $block['name'] ?? '';
@@ -131,6 +229,11 @@ class OutputFormatter
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
     }
 
+    /**
+     * Write indented lines to the output.
+     *
+     * @param string|array $lines The lines to write, can be a single string or an array of strings.
+     */
     private function writeIndentedLines(string|array $lines): void
     {
         foreach ((array) $lines as $line) {
@@ -138,6 +241,11 @@ class OutputFormatter
         }
     }
 
+    /**
+     * Print a line of text with indentation.
+     *
+     * @param string $text The text to print.
+     */
     private function printIndented(string $text): void
     {
         $lines = explode("\n", $text);
@@ -146,6 +254,12 @@ class OutputFormatter
         }
     }
 
+    /**
+     * Print a section header with a title and icon.
+     *
+     * @param string $type The type of section (e.g., 'summary', 'files').
+     * @param string $title The title of the section.
+     */
     private function printSectionHeader(string $type, string $title): void
     {
         $this->output->writeln('');
@@ -153,6 +267,11 @@ class OutputFormatter
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
     }
 
+    /**
+     * Print the footer for a section.
+     *
+     * @param bool $isLast Whether this is the last section to be printed.
+     */
     private function printSectionFooter(bool $isLast = false): void
     {
         $this->output->writeln("  <border>" . str_repeat($this->border, 60) . "</>");
