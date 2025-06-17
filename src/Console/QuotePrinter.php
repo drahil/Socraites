@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Console;
 
 use drahil\Socraites\Resources\SocratesQuotes;

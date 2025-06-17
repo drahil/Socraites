@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Parsers\Visitors;
 
 use PhpParser\Node;
@@ -89,7 +91,7 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
      * @param array $nodes The nodes to be traversed.
      * @return null
      */
-    public function beforeTraverse(array $nodes)
+    public function beforeTraverse(array $nodes): null
     {
         $this->currentNamespace = '';
         $this->variableTypes = [];

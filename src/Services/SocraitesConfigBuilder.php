@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Services;
 
 use InvalidArgumentException;
@@ -21,9 +23,7 @@ class SocraitesConfigBuilder
     public function build(): void
     {
         $socraitesJson = [
-            'framework' => $this->askFramework(),
             'maximum_context_size' => $this->askContextSize(),
-            'verbose_answer' => $this->askVerbose(),
             'ignore_patterns' => $this->askIgnorePatterns(),
             'extensions' => $this->askExtensions(),
             'code_review_prompt' => $this->askCodeReviewPrompt(),
@@ -36,20 +36,6 @@ class SocraitesConfigBuilder
     }
 
     /**
-     * Ask the user for the framework they are using.
-     *
-     * @return string The selected framework.
-     */
-    private function askFramework(): string
-    {
-        return $this->io->choice(
-            'Select the framework you are using:',
-            ['None', 'Laravel', 'Symfony', 'CodeIgniter', 'CakePHP', 'Zend Framework', 'Yii', 'Phalcon', 'Slim'],
-            'None'
-        );
-    }
-
-    /**
      * Ask the user for the maximum context size.
      *
      * @return int The maximum context size in KB.
@@ -58,24 +44,14 @@ class SocraitesConfigBuilder
     {
         return $this->io->ask(
             'By default the maximum context size is 100 KB. You can change it to a value between 1 and 1024 KB.',
-            100,
+            "100",
             function ($value) {
                 if (! is_numeric($value) || $value <= 0) {
                     throw new InvalidArgumentException('The maximum context size must be a positive integer.');
                 }
-                return (int) $value * 1024;
+                return (string) $value * 1024;
             }
         );
-    }
-
-    /**
-     * Ask the user if they want verbose output.
-     *
-     * @return bool True if verbose output is enabled, false otherwise.
-     */
-    private function askVerbose(): bool
-    {
-        return $this->io->confirm('Do you want to enable verbose output?', false);
     }
 
     /**
@@ -114,11 +90,11 @@ class SocraitesConfigBuilder
     private function askCodeReviewPrompt(): string
     {
         $defaultPrompt = <<<EOT
-            You are an expert code reviewer.
+            You are an expert code reviewer for laravel.
             
             Start by reading the provided context carefully. If any file referenced in the diff is missing from the context, clearly mention which files are missing.
             
-            Assume all code changes are part of a single feature or task. Use the provided framework (if mentioned) to guide your analysis and understanding.
+            Assume all code changes are part of a single feature or task.
             
             Then, review the following Git diff with these steps:
             
@@ -142,9 +118,7 @@ class SocraitesConfigBuilder
             
             5. **Commit Message**
                 - Propose a concise and clear Git commit message that captures the intent of the changes.
-            
-            If `verbose mode` is enabled, include more detailed and in-depth suggestions.
-            
+                        
             Your response must be in JSON format and follow this structure:
             
             {
@@ -227,12 +201,12 @@ class SocraitesConfigBuilder
     {
         return $this->io->ask(
             'Enter the OpenAI temperature',
-            0.2,
+            (string) 0.2,
             function ($value) {
-                if (!is_numeric($value) || $value < 0 || $value > 1) {
+                if (! is_numeric($value) || $value < 0 || $value > 1) {
                     throw new InvalidArgumentException('The OpenAI temperature must be a number between 0 and 1.');
                 }
-                return (float)$value;
+                return (string) $value;
             }
         );
     }

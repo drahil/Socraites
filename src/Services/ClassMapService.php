@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Services;
 
 use Composer\Autoload\ClassLoader;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Services;
 
 use GuzzleHttp\Client;
@@ -112,7 +114,7 @@ class AiService
             'json' => $this->payload,
         ]);
 
-        $result = json_decode($response->getBody(), true);
+        $result = json_decode((string) $response->getBody(), true);
         
         $this->aiResponse = $result['choices'][0]['message']['content'] ?? '';
 
