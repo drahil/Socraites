@@ -103,13 +103,14 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
      * It is used to collect information about the node.
      *
      * @param Node $node The node being visited.
-     * @return void
+     * @return int|null|Node|Node[]
      */
-    public function enterNode(Node $node): void
+    public function enterNode(Node $node): int|Node|array|null
     {
         if ($node instanceof Node\Stmt\Namespace_) {
             $this->currentNamespace = $node->name ? $node->name->toString() : '';
-            return;
+
+            return null;
         }
 
         $this->trackVariableAssignments($node);
@@ -117,6 +118,8 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         $this->trackStaticCalls($node);
         $this->trackNewInstances($node);
         $this->trackTypeHints($node);
+
+        return null;
     }
 
     /**
