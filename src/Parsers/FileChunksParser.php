@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Parsers;
 
 use drahil\Socraites\Parsers\Visitors\MethodChunkVisitor;
