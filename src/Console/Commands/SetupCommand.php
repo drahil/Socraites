@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace drahil\Socraites\Console;
+namespace drahil\Socraites\Console\Commands;
 
 use drahil\Socraites\Services\SocraitesConfigBuilder;
 use Symfony\Component\Console\Command\Command;

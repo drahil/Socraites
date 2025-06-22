@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace drahil\Socraites\Console;
+namespace drahil\Socraites\Console\Commands;
 
 use drahil\Socraites\Console\Formatters\OutputFormatter;
+use drahil\Socraites\Console\QuotePrinter;
 use drahil\Socraites\Services\AiService;
-use drahil\Socraites\Services\ContextBuilder;
 use drahil\Socraites\Services\ChangedFilesService;
+use drahil\Socraites\Services\ContextBuilder;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

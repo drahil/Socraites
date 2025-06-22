@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace drahil\Socraites\Console;
 
+use drahil\Socraites\Console\Commands\CodeReviewCommand;
+use drahil\Socraites\Console\Commands\SetupCommand;
+use drahil\Socraites\Console\Commands\VectorizeCommand;
 use drahil\Socraites\Console\Formatters\OutputFormatter;
 use drahil\Socraites\Services\AiService;
 use drahil\Socraites\Services\ChangedFilesService;
@@ -31,5 +34,7 @@ class Application extends BaseApplication
         ));
 
         $this->add(new SetupCommand());
+
+        $this->add(new VectorizeCommand());
     }
 }
