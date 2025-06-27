@@ -2,6 +2,7 @@
 
 namespace drahil\Socraites\Providers;
 
+use drahil\Socraites\Console\Commands\VectorizeCommand;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
@@ -27,6 +28,10 @@ class SocraitesServiceProvider extends ServiceProvider
             __DIR__
             . '/../../database/migrations/create_code_chunks_table.php.stub' => $this->getMigrationFileName('create_code_chunks_table.php'),
         ], 'socraites-migrations');
+
+        $this->commands(
+            VectorizeCommand::class,
+        );
     }
 
     /**
