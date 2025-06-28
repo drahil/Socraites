@@ -3,6 +3,7 @@
 namespace drahil\Socraites\Console\Commands;
 
 use drahil\Socraites\Parsers\FileChunksParser;
+use drahil\Socraites\Services\AiService;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Symfony\Component\Console\Command\Command;
@@ -11,9 +12,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class VectorizeCommand extends Command
 {
+    protected AiService $aiService;
+
     public function __construct()
     {
         parent::__construct('vectorize');
+
+        $this->aiService = new AiService(
+            config('socraites.openai_api_key')
+        );
     }
 
     /**
@@ -39,20 +46,7 @@ class VectorizeCommand extends Command
                 $output->writeln("<info>Processing file: {$file}</info>");
                 $parsed = $fileChunksParser->parse($file);
 
-                foreach ($parsed['chunks'] as $chunk) {
-                    \DB::table('code_chunks')->insert([
-                        'type' => $chunk['type'],
-                        'method_name' => $chunk['method_name'] ?? '',
-                        'class_name' => $chunk['class_name'] ?? '',
-                        'namespace' => $chunk['namespace'],
-                        'file_path' => $chunk['file_path'],
-                        'start_line' => $chunk['start_line'] ?? '1',
-                        'end_line' => $chunk['end_line'] ?? '1',
-                        'code' => $chunk['code'] ?? json_encode($chunk['imports']),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+                $this->handleChunks($parsed['chunks']);
             } catch (\Exception $e) {
                 $output->writeln("<error>Error parsing file {$file}: {$e->getMessage()}</error>");
             }
@@ -81,5 +75,53 @@ class VectorizeCommand extends Command
         }
 
         return $files;
+    }
+
+    /**
+     * Handle the chunks of code and insert them into the database.
+     *
+     * @param array $chunks
+     * @return void
+     */
+    private function handleChunks(array $chunks): void
+    {
+        foreach ($chunks as $chunk) {
+            $code = $chunk['code'] ?? json_encode($chunk['imports']);
+
+            $codeChunkId = \DB::table('code_chunks')->insertGetId([
+                'type' => $chunk['type'],
+                'method_name' => $chunk['method_name'] ?? '',
+                'class_name' => $chunk['class_name'] ?? '',
+                'namespace' => $chunk['namespace'],
+                'file_path' => $chunk['file_path'],
+                'start_line' => $chunk['start_line'] ?? '-1',
+                'end_line' => $chunk['end_line'] ?? '-1',
+                'code' => $code,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $this->createEmbeddings($codeChunkId, $code);
+        }
+    }
+
+    /**
+     * Create embeddings for the given code chunk.
+     *
+     * @param int $codeChunkId
+     * @param string $code
+     * @return void
+     */
+    private function createEmbeddings(int $codeChunkId, string $code): void
+    {
+        $embedding = $this->aiService
+            ->buildPayload()
+            ->usingModel('text-embedding-6-small')
+            ->withInput($code)
+            ->getEmbedding();
+
+        \DB::table('code_chunks')
+            ->where('id', $codeChunkId)
+            ->update(['embedding' => $embedding]);
     }
 }

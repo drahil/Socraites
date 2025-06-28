@@ -135,4 +135,26 @@ class AiService
 
         return $this;
     }
+
+    public function withInput(string $input): AiService
+    {
+        $this->payload['input'] = $input;
+
+        return $this;
+    }
+
+    public function getEmbedding()
+    {
+        $response = $this->client->post('https://api.openai.com/v1/embeddings', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->token,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $this->payload,
+        ]);
+
+        $result = json_decode((string) $response->getBody(), true);
+
+        return $result['data'][0]['embedding'];
+    }
 }

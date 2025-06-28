@@ -19,14 +19,16 @@ use Throwable;
 class CodeReviewCommand extends Command
 {
     protected ContextBuilder $contextBuilder;
+    protected AiService $aiService;
 
     public function __construct(
         private readonly ChangedFilesService $changedFilesService,
-        private readonly AiService $aiService,
         private readonly OutputFormatter $formatter,
         private readonly QuotePrinter $quotePrinter
     ) {
         parent::__construct('code-review');
+
+        $this->aiService = new AiService(config('socraites.openai_api_key'));
     }
 
     /**

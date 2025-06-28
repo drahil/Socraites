@@ -19,16 +19,8 @@ class Application extends BaseApplication
     {
         parent::__construct('socraites');
 
-        $apiKey = socraites_config('openai_api_key');
-
-        if (! $apiKey) {
-            echo "Missing OpenAI API key.\n";
-            exit(1);
-        }
-
         $this->add(new CodeReviewCommand(
             new ChangedFilesService(),
-            new AiService($apiKey),
             new OutputFormatter([]),
             new QuotePrinter(new ConsoleOutput())
         ));
