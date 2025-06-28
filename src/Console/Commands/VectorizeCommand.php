@@ -36,7 +36,9 @@ class VectorizeCommand extends Command
         $fileChunksParser = new FileChunksParser();
         foreach ($files as $file) {
             try {
+                $output->writeln("<info>Processing file: {$file}</info>");
                 $parsed = $fileChunksParser->parse($file);
+
                 foreach ($parsed['chunks'] as $chunk) {
                     \DB::table('code_chunks')->insert([
                         'type' => $chunk['type'],

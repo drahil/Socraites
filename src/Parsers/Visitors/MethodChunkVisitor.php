@@ -89,7 +89,16 @@ class MethodChunkVisitor extends NodeVisitorAbstract
                 'file_path' => $this->filePath,
                 'namespace' => $this->namespace,
                 'imports' => $this->imports,
-                'count' => count($this->imports),
+            ];
+        }
+
+        if (empty($this->chunks)) {
+            $this->chunks[] = [
+                'type' => 'empty',
+                'file_path' => $this->filePath,
+                'namespace' => $this->namespace,
+                'class_name' => $this->className,
+                'imports' => ''
             ];
         }
 

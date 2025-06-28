@@ -46,7 +46,6 @@ class CodeReviewCommand extends Command
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
-     * @throws GuzzleException
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
