@@ -8,10 +8,8 @@ use drahil\Socraites\Console\Commands\CodeReviewCommand;
 use drahil\Socraites\Console\Commands\SetupCommand;
 use drahil\Socraites\Console\Commands\VectorizeCommand;
 use drahil\Socraites\Console\Formatters\OutputFormatter;
-use drahil\Socraites\Services\AiService;
 use drahil\Socraites\Services\ChangedFilesService;
 use Symfony\Component\Console\Application as BaseApplication;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 class Application extends BaseApplication
 {
@@ -22,7 +20,7 @@ class Application extends BaseApplication
         $this->add(new CodeReviewCommand(
             new ChangedFilesService(),
             new OutputFormatter([]),
-            new QuotePrinter(new ConsoleOutput())
+            new QuotePrinter()
         ));
 
         $this->add(new SetupCommand());

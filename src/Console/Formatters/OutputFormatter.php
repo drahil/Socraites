@@ -21,7 +21,7 @@ class OutputFormatter
         'commit' => '💬',
     ];
 
-    public function __construct(protected array $response)
+    public function __construct(protected array $response = [])
     {
         $this->output = new ConsoleOutput();
         $this->configureStyles();

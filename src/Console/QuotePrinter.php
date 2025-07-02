@@ -9,20 +9,18 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class QuotePrinter
 {
-    private OutputInterface $output;
 
-    public function __construct(OutputInterface $output)
+    public function __construct()
     {
-        $this->output = $output;
     }
 
-    public function printQuote(): void
+    public function printQuote(OutputInterface $output): void
     {
-        $this->output->writeln('');
-        $this->output->writeln("<info>Analyzing your code...</info>");
-        $this->output->writeln('');
-        $this->output->writeln("<comment>\"" . SocratesQuotes::getRandomQuote() . "\"</comment>");
-        $this->output->writeln("<comment>- Socrates</comment>");
-        $this->output->writeln('');
+        $output->writeln('');
+        $output->writeln("<info>Analyzing your code...</info>");
+        $output->writeln('');
+        $output->writeln("<comment>\"" . SocratesQuotes::getRandomQuote() . "\"</comment>");
+        $output->writeln("<comment>- Socrates</comment>");
+        $output->writeln('');
     }
 }

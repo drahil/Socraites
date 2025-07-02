@@ -54,10 +54,9 @@ class CodeReviewCommand extends Command
         $changedCode = $this->changedFilesService->getGitDiff();
         $changedFiles = $this->changedFilesService->getChangedFiles();
 
-        $this->quotePrinter->printQuote();
+        $this->quotePrinter->printQuote($output);
 
-        $this->contextBuilder = new ContextBuilder($changedFiles);
-        $context = $this->contextBuilder->buildContext();
+        $context = $this->startCodeReview($changedCode, $changedFiles);
 
         $this->getCodeReview($changedCode, $context);
 
@@ -67,6 +66,75 @@ class CodeReviewCommand extends Command
         $this->formatter->printThankYouMessage();
 
         return Command::SUCCESS;
+    }
+
+    private function startCodeReview(string $changedCode, array $changedFiles): array
+    {
+        try {
+            $aiRequests = $this->aiService
+                ->buildPayload()
+                ->usingModel(socraites_config('openai_model'))
+                ->withPrompt(config('socraites.prompts.initial_message'))
+                ->withUserMessage('Git diff', $changedCode)
+                ->withUserMessage('Changed files', json_encode($changedFiles, JSON_PRETTY_PRINT))
+                ->withTemperature(socraites_config('temperature', 0.2))
+                ->getResponse();
+
+        } catch (Throwable $e) {
+            $this->formatter->printError();
+            return [];
+        }
+
+        return $this->getCodeAiRequested($aiRequests);
+    }
+
+    /**
+     * Get the code requested by the AI based on the AI requests.
+     *
+     * @param string $aiRequests The AI requests in JSON format.
+     * @return array The code snippets requested by the AI.
+     */
+    private function getCodeAiRequested(string $aiRequests): array
+    {
+        $aiRequests = json_decode($aiRequests, true);
+
+        $code = [];
+        $contextRequests = $aiRequests['code_context_requests'];
+
+        if (is_array($contextRequests)) {
+            foreach ($contextRequests as $class => $functions) {
+                $code[] = \DB::table('code_chunks')
+                    ->where('class_name', $class)
+                    ->whereIn('method_name', $functions)
+                    ->select('code')
+                    ->get();
+            }
+        }
+
+        $semanticContextRequests = $aiRequests['semantic_context_requests'];
+
+        $semanticContextRequestsVectors = $this->aiService
+            ->buildPayload()
+            ->usingModel('text-embedding-3-small');
+
+
+        if (is_array($semanticContextRequests)) {
+            foreach ($semanticContextRequests as $request) {
+                $semanticContextRequestsVectors = $semanticContextRequestsVectors
+                    ->withInput($request);
+            }
+        }
+
+        $embedding = $semanticContextRequestsVectors
+            ->getEmbedding();
+
+        $results = \DB::table('code_chunks')
+            ->select('code')
+            ->orderByRaw('embedding <-> ?', [json_encode($embedding)])
+            ->limit(5)
+            ->get();
+
+        return array_merge($code, $results->toArray());
     }
 
     /**
@@ -81,7 +149,7 @@ class CodeReviewCommand extends Command
             $codeReview = $this->aiService
                 ->buildPayload()
                 ->usingModel(socraites_config('openai_model'))
-                ->withPrompt(socraites_config('code_review_prompt'))
+                ->withPrompt(config('socraites.prompts.code_review_message'))
                 ->withUserMessage('Git diff', $changedCode)
                 ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
                 ->withTemperature(socraites_config('temperature', 0.2))
