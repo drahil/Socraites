@@ -20,7 +20,7 @@ class Application extends BaseApplication
         $this->add(new CodeReviewCommand(
             new ChangedFilesService(),
             new OutputFormatter([]),
-            new QuotePrinter()
+            new QuotePrinter(),
         ));
 
         $this->add(new SetupCommand());
