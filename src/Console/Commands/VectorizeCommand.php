@@ -6,6 +6,7 @@ namespace drahil\Socraites\Console\Commands;
 
 use drahil\Socraites\Parsers\FileChunksParser;
 use drahil\Socraites\Services\AiService;
+use GuzzleHttp\Exception\GuzzleException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Symfony\Component\Console\Command\Command;
@@ -37,6 +38,7 @@ class VectorizeCommand extends Command
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
+     * @throws GuzzleException
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -84,6 +86,7 @@ class VectorizeCommand extends Command
      *
      * @param array $chunks
      * @return void
+     * @throws GuzzleException
      */
     private function handleChunks(array $chunks): void
     {
@@ -113,12 +116,13 @@ class VectorizeCommand extends Command
      * @param int $codeChunkId
      * @param string $code
      * @return void
+     * @throws GuzzleException
      */
     private function createEmbeddings(int $codeChunkId, string $code): void
     {
         $embedding = $this->aiService
             ->buildPayload()
-            ->usingModel('text-embedding-6-small')
+            ->usingModel('text-embedding-3-small')
             ->withInput($code)
             ->getEmbedding();
 

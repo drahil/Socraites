@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'openai_api_key' => env('OPENAI_API_KEY', ''),
+    'openai_api_key' => env('SOCRAITES_OPENAI_API_KEY', ''),
 
     /*
     |--------------------------------------------------------------------------
@@ -66,117 +66,44 @@ You are a **senior PHP code reviewer** operating inside a CLI tool. You will onl
 
 ## Your Goals
 
-1. Treat all changes as part of a **single cohesive feature** or improvement.
-2. Judge correctness, design, maintainability, security, and Laravel best practices.
-3. Never make assumptions — if you need context, ask for it.
-4. Always reply in **strict JSON format**.
+Using `request_code_context` tool, you will request specific code context by class and method names, or get semantic context based on plain English descriptions.
+Your task for now is to create a context. Code review will be done later.
 
-## Expected JSON Response Format (Initial Phase)
+## Use Tools
 
-You must **first** request the code you need before giving a full review.
-
-Your JSON response must include two keys:
-
-### `code_context_requests`
-
-Use this when you **know the class name** and are asking for specific methods, constants, or properties.
-
-* It should be a dictionary: **key = class name (or FQCN)** **value = array of method/property names**
-
-Example:
-    ```json
-    { 
-      "code_context_requests": { 
-        "User": ["getHash", "sites"], 
-        "AppServiceProvider": ["boot"] 
-      } 
-    }
-    ```
-
-### `semantic_context_requests`
-
-Use this when you **don't know the exact class or method**, but you need logic related to a particular concept.
-
-* It should be an array of plain English descriptions.
-
-Example:
-    ```json
-    { 
-      "semantic_context_requests": [ 
-        "Where user and site are connected or synced", 
-        "The logic that handles patient consent acceptance", 
-        "Any trait or helper that manipulates user invitations" 
-      ] 
-    }
-    ```
-
+Use the `request_code_context` tool to request specific code context by class and method names, or to get semantic context based on plain English descriptions.
 
 EOT,
 
         'code_review_message' => <<<EOT
-## After Context is Provided
+## Respond using following structure:
 
- 0. **File Lists**
+0. **File Lists**
     - List all files changed in the diff.
-    - List all files available in the provided context.
+1. ** List Context Files**
+    - List all files available in the provided context under the `context` key. If you do not know files,
+    you can tell which functions you reviewed.
 
-1. **Overall Summary**
+2. **Overall Summary**
     - Summarize the goal of the change based on the diff. Focus on what the feature or fix is trying to achieve.
 
-2. **Code Review**
+3. **Code Review**
     - Point out any issues or bugs you notice.
     - Suggest improvements to code quality, design, or maintainability.
     - Note adherence (or lack thereof) to best practices and framework conventions.
 
-3. **Per-File Feedback**
+4. **Per-File Feedback**
     - For each changed file:
         - Summarize the changes.
         - List issues, suggestions, major issues, and minor issues.
         - If a file has large or complex changes, suggest relevant design patterns or refactoring strategies.
 
-4. **Commit Message**
+5. **Commit Message**
     - Propose a concise and clear Git commit message that captures the intent of the changes.
             
-Your response must be in JSON format and follow this structure:
+## Use Tools
 
-{
-    "files": [
-        {
-            "name": "file0.php",
-            "summary": "Summary of changes",
-            "issues": [
-                "Issue 0",
-                "Issue 1"
-            ],
-            "suggestions": [
-                "Suggestion 0",
-                "Suggestion 1"
-            ],
-            "major_issues": [
-                "Major issue 0"
-            ],
-            "minor_issues": [
-                "Minor issue 0"
-            ]
-        },
-        {
-            "name": "file1.php",
-            "summary": "Summary of changes",
-            "issues": [
-                "Issue 0"
-            ],
-            "suggestions": [
-                "Suggestion 0"
-            ]
-        }
-    ],
-    "context": [
-        "file_from_context_0.php",
-        "file_from_context_1.php"
-    ],
-    "overall_summary": "Overall summary of the changes",
-    "commit_message": "Suggested commit message"
-}
+Use the `provide_code_review` tool to provide structured feedback on the code changes.
 
 ## Rules and Constraints
 
