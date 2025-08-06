@@ -26,7 +26,7 @@ class CodeReviewCommand extends Command
         private readonly OutputFormatter $formatter,
         private readonly QuotePrinter $quotePrinter,
     ) {
-        parent::__construct('code-review');
+        parent::__construct('socraites:code-review');
 
         $this->aiService = new AiService(config('socraites.openai_api_key'));
     }

@@ -19,7 +19,7 @@ class VectorizeCommand extends Command
 
     public function __construct()
     {
-        parent::__construct('vectorize');
+        parent::__construct('socraites:vectorize');
 
         $this->aiService = new AiService(
             config('socraites.openai_api_key')

@@ -1,80 +1,74 @@
-# Socraites - AI-Powered Code Review Tool for PHP
+# Socraites – AI-Powered Code Review Tool for Laravel
 
+An intelligent Laravel-specific CLI tool that performs AI-assisted code reviews by analyzing your staged Git changes and their surrounding code context.
 
-An intelligent CLI tool that performs AI-assisted code reviews by analyzing your Git staged changes and their context.
+> ⚠️ For development environments only<br>
+> 📦 PostgreSQL is required<br>
+> 🧱 Laravel-only support
 
-## Features
+## ✨ Features
 
-- 🔍 **Smart Context Analysis**: Goes beyond simple `git diff` to understand code relationships
-- 🤖 **AI-Powered Insights**: Leverages OpenAI to provide meaningful code review feedback
-- ⚙️ **Configurable**: Adjust scoring weights and context size to fit your needs
-- 📊 **Structured Output**: Beautifully formatted review results in your terminal
-- 🧠 **Framework Aware**: Optional framework-specific analysis (via `--framework` flag)
+    🧠 AI-Powered Reviews: Get actionable, context-aware code feedback using OpenAI
 
-## Installation
+    🛠️ Built for Laravel: Tailored to Laravel conventions and structure
 
+    📁 Function-Level Chunking: Your codebase is automatically broken down and vectorized by method/function
+
+    🔍 Persistent Vector Context: Code context is stored in PostgreSQL for efficient retrieval
+
+    ⚙️ Fully Configurable: Customize OpenAI model, temperature, max context size, etc.
+
+    ✅ Simple Artisan Workflow: Setup and review your codebase with familiar Artisan commands
+
+## 📦 Installation
+
+Install the package in development only:
 ```bash
-composer require drahil/socraites
+composer require --dev drahil/socraites
 ```
-
-## Usage
-
-### Setup Socraites
-
-Before using Socraites, run the interactive setup command to configure your environment:
+Publish the config and migration files:
 ```bash
-vendor/bin/socraites setup
+php artisan vendor:publish --provider="drahil\Socraites\Providers\SocraitesServiceProvider"
 ```
-
-### Basic Code Code Review
+Run the migration to create the code_chunks table (PostgreSQL only):
 ```bash
-vendor/bin/socraites code-review
+php artisan migrate
 ```
+## 🚀 Usage
+1. Setup Socraites
 
-### Options for Code Review
-- `--framework=<framework>`: Specify a framework for tailored analysis (e.g., `laravel`, `symfony`, etc.)
-- `--verbose-output`: Enable verbose output for detailed logs
+    This interactive command configures your environment and generates .socraites.json:
+    ```bash
+    php artisan socraites:setup
+    ```
+    It collects and stores:
+    ```json
+    {
+      "maximum_context_size": 10000,
+      "ignore_patterns": ["tests/", "vendor/"],
+      "extensions": [".php"],
+      "openai_model": "gpt-4",
+      "openai_temperature": 0.2,
+      "question_prompt": "Perform a detailed code review"
+    }
+    ```
 
-## Configuration
+2. Vectorize Your Codebase
 
-Socraites supports multiple configuration methods, with the following priority order (highest to lowest):
+   This command chunks your codebase by functions/methods and stores vectors in the `code_chunks` table:
+    ```bash
+    php artisan socraites:vectorize
+    ```
+3. Perform Code Review
 
-1. `.socraites.json` file in the project root (created via `setup` command)
-2. Laravel-style configuration (`config/socraites.php`)
-3. Environment variables
+   After staging your changes via git add, run the review:
+   Analyze your staged changes and surrounding context:
+    ```bash
+    php artisan socraites:code-review
+    ```
 
 
-
-### Required Configurations
-```bash
-export SOCRAITES_OPENAI_API_KEY=your_api_key_here
-```
-
-## How It Works
-
-Socraites performs intelligent code analysis by:
-
-- Collecting Changes:
-
-  - Gets staged changes using git diff --staged
-
-  - Identifies all modified files
-
-- Building Context:
-
-  - Analyzes relationships between changed files
-
-  - Examines imports, extensions, and other code patterns
-
-  - Respects configured weights for different patterns
-
-- Generating Review:
-
-  - Sends structured context to AI service
-
-  - Returns formatted review with actionable insights
-
-## Example Output
+## 🧾 Example Output
 
 ```bash
 Analyzing your code...
@@ -115,7 +109,12 @@ Analyzing your code...
   ────────────────────────────────────────────────────────────
      Add User class skeleton implementing UserInterface
   ────────────────────────────────────────────────────────────
+   Do you have a question about the code review? [no]:
+   > 
 ```
+After the code review output, Socraites offers an optional interactive prompt.
+
+You can type a custom question (e.g., "*Why is this considered a major issue?*" or "*How can I improve this method further?*"), and Socraites will generate a detailed AI response based on the review context.
 
 ### 📦 PHP Dependencies
 
@@ -128,5 +127,5 @@ Analyzing your code...
 
 ## 📃 License
 
-Socrates is open-sourced software licensed under the [MIT license](LICENSE).
+Socraites is open-sourced software licensed under the [MIT license](LICENSE).
 

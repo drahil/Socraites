@@ -14,7 +14,7 @@ class SetupCommand extends Command
 {
     public function __construct()
     {
-        parent::__construct('setup');
+        parent::__construct('socraites:setup');
     }
 
     /**
