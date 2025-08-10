@@ -7,10 +7,12 @@ namespace drahil\Socraites\Console\Commands;
 use drahil\Socraites\Parsers\FileChunksParser;
 use drahil\Socraites\Services\AiService;
 use GuzzleHttp\Exception\GuzzleException;
+use InvalidArgumentException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class VectorizeCommand extends Command
@@ -31,7 +33,19 @@ class VectorizeCommand extends Command
      */
     protected function configure(): void
     {
-        $this->setDescription('Vectorize whole codebase');
+        $this->setDescription('Vectorize whole codebase')
+            ->addOption(
+                'files',
+                null,
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Select files to vectorize by providing their paths. If not provided, all files in the app directory will be processed.',
+                []
+            )->addOption(
+                'directory',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Specify a directory to vectorize files from. If not provided, the app directory will be used.',
+            );
     }
 
     /**
@@ -42,13 +56,17 @@ class VectorizeCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $files = $this->getFilesFromAppDirectory();
+        $files = $this->getFiles($input);
 
         $fileChunksParser = new FileChunksParser();
         foreach ($files as $file) {
             try {
                 $output->writeln("<info>Processing file: {$file}</info>");
                 $parsed = $fileChunksParser->parse($file);
+
+                \DB::table('code_chunks')
+                    ->where('file_path', $file)
+                    ->delete();
 
                 $this->handleChunks($parsed['chunks']);
             } catch (\Exception $e) {
@@ -62,11 +80,12 @@ class VectorizeCommand extends Command
     /**
      * Get all files from the app directory recursively.
      *
+     * @param string $path
      * @return array
      */
-    private function getFilesFromAppDirectory(): array
+    private function getFilesFromDirectory(string $path): array
     {
-        $directory = getcwd() . '/app';
+        $directory = getcwd() . $path;
 
         $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
 
@@ -129,5 +148,35 @@ class VectorizeCommand extends Command
         \DB::table('code_chunks')
             ->where('id', $codeChunkId)
             ->update(['embedding' => $embedding]);
+    }
+
+    /**
+     * Get files based on the input options.
+     *
+     * @param InputInterface $input
+     * @return array
+     * @throws InvalidArgumentException
+     */
+    private function getFiles(InputInterface $input): array
+    {
+        $files = $input->getOption('files');
+        $directory = $input->getOption('directory');
+
+        if ($files && $directory) {
+            throw new InvalidArgumentException('You cannot use both --files and --directory options at the same time.');
+        }
+
+        if ($files) {
+            // before returning we need to add the full path to each file
+            return array_map(function ($file) {
+                return getcwd() . '/' . ltrim($file, '/');
+            }, $files);
+        }
+
+        if ($directory) {
+            return $this->getFilesFromDirectory($directory);
+        }
+
+        return $this->getFilesFromDirectory('/app');
     }
 }
