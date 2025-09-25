@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace drahil\Socraites\Services;
 
 use drahil\Socraites\Services\Tools\RequestCodeContextTool;
+use drahil\Socraites\Services\Tools\ValidateDeletedCodeTool;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 
 class ContextBuilder
 {
-    public function __construct(protected AiService $aiService, protected string $changedCode, protected array $changedFiles)
-    {
+    public function __construct(
+        protected AiService $aiService, 
+        protected string $changedCode, 
+        protected array $changedFiles,
+        protected ?DeletedCodeAnalyzer $deletedCodeAnalyzer = null
+    ) {
+        $this->deletedCodeAnalyzer = $deletedCodeAnalyzer ?? new DeletedCodeAnalyzer();
     }
 
     /**
@@ -60,8 +66,59 @@ class ContextBuilder
              return [];
          }
 
+         // Validate deleted code if there are any deletions
+         $deletedCodeValidation = $this->validateDeletedCode();
+         if ($deletedCodeValidation) {
+             $context['deleted_code_validation'] = $deletedCodeValidation;
+         }
+
          return $context;
      }
+
+    /**
+     * Validate deleted code using AI analysis.
+     *
+     * @return array|null Deleted code validation results or null if no significant deletions
+     * @throws GuzzleException
+     */
+    private function validateDeletedCode(): ?array
+    {
+        $deletedCode = $this->deletedCodeAnalyzer->extractDeletedCode($this->changedCode);
+        
+        if (empty($deletedCode)) {
+            return null; // No deletions found
+        }
+
+        // Filter out trivial deletions (like single line comments, whitespace, etc.)
+        $significantDeletions = array_filter($deletedCode, function($deletion) {
+            return !empty($deletion['name']) && strlen(trim($deletion['code_snippet'] ?? '')) > 10;
+        });
+
+        if (empty($significantDeletions)) {
+            return null; // No significant deletions found
+        }
+
+        try {
+            $validationResult = $this->aiService
+                ->buildPayload()
+                ->usingModel(socraites_config('openai_model'))
+                ->withPreviousConversation()
+                ->withPrompt(config('socraites.prompts.deleted_code_validation'))
+                ->withTool(new ValidateDeletedCodeTool())
+                ->withUserMessage('Deleted Code Analysis', json_encode($significantDeletions, JSON_PRETTY_PRINT))
+                ->withUserMessage('Git Diff', $this->changedCode)
+                ->withTemperature(socraites_config('temperature', 0.2))
+                ->getToolResponse();
+
+            return $validationResult ? json_decode($validationResult, true) : null;
+        } catch (Exception $e) {
+            // Log error but don't fail the entire process
+            return [
+                'error' => 'Failed to validate deleted code: ' . $e->getMessage(),
+                'deleted_items_count' => count($significantDeletions)
+            ];
+        }
+    }
 
     /**
      * Get the code requested by the AI based on the AI requests.

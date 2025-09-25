@@ -13,7 +13,9 @@ class RequestCodeContextTool extends BaseTool
 
     public function getDescription(): string
     {
-        return config('socraites.prompts.code_review_message');
+        return 'Request specific code context from the codebase. Use this tool to gather relevant code snippets, '
+            . 'class methods, and related functionality needed for a comprehensive code review. '
+            . 'You can request specific classes and methods by name, or use semantic search to find related code patterns.';
     }
 
     public function getParametersSchema(): array
@@ -23,21 +25,34 @@ class RequestCodeContextTool extends BaseTool
             'properties' => [
                 'code_context_requests' => [
                     'type' => 'object',
-                    'description' => 'Use when you know the class name and are asking for specific methods, constants, or properties.'
-                        . ' Dictionary where key = class name (or FQCN), value = array of method/property names'
-                        . 'Repeat this until you have enough context to provide a thorough code review, but make sure'
-                        . 'not to ask for the same class or method multiple times. If you do not need context, send an empty object.',
+                    'description' => 'Request specific classes and their methods/properties by exact name. '
+                        . 'Use this when you can identify class names from imports, inheritance, or method calls in the diff. '
+                        . 'Key = full class name (e.g., "App\\Services\\UserService"), '
+                        . 'Value = array of specific method/property names to retrieve. '
+                        . 'Limit to 3-5 most relevant classes to avoid context overload.',
                     'additionalProperties' => [
                         'type' => 'array',
                         'items' => ['type' => 'string']
                     ],
+                    'examples' => [
+                        [
+                            'App\\Http\\Controllers\\UserController' => ['store', 'update', 'destroy'],
+                            'App\\Models\\User' => ['fillable', 'rules', 'boot']
+                        ]
+                    ]
                 ],
                 'semantic_context_requests' => [
                     'type' => 'array',
-                    'description' => 'Use when you don\'t know the exact class or method, but need logic related to a particular concept.'
-                        . ' Array of plain English descriptions.'
-                        . ' Repeat this until you have enough context to provide a thorough code review.',
+                    'description' => 'Search for related code using natural language descriptions. '
+                        . 'Use this when you need context about functionality but don\'t know exact class/method names. '
+                        . 'Examples: "user authentication logic", "email validation rules", "payment processing workflow". '
+                        . 'Keep descriptions specific and focused on the area being changed.',
                     'items' => ['type' => 'string'],
+                    'examples' => [
+                        'user registration and validation logic',
+                        'error handling for database operations',
+                        'middleware for API authentication'
+                    ]
                 ]
             ],
             'required' => [],

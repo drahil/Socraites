@@ -9,6 +9,7 @@ use drahil\Socraites\Console\QuotePrinter;
 use drahil\Socraites\Services\AiService;
 use drahil\Socraites\Services\ChangedFilesService;
 use drahil\Socraites\Services\ContextBuilder;
+use drahil\Socraites\Services\DeletedCodeAnalyzer;
 use drahil\Socraites\Services\Tools\ProvideCodeReviewTool;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\Console\Command\Command;
@@ -61,6 +62,7 @@ class CodeReviewCommand extends Command
             $this->aiService,
             $changedCode,
             $changedFiles,
+            new DeletedCodeAnalyzer()
         );
 
         $context = $contextBuilder->build();
