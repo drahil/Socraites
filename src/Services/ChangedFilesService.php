@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Services;
 
 use RuntimeException;
@@ -16,6 +18,7 @@ class ChangedFilesService
     public function getChangedFiles(): array
     {
         $files = $this->getChangedFilesFromGit();
+
         return $this->filterFiles($files);
     }
 
@@ -72,10 +75,6 @@ class ChangedFilesService
             // Handle renamed files
             if (str_contains($path, ' -> ')) {
                 list(, $path) = explode(' -> ', $path);
-            }
-
-            // TODO decide how to handle deleted files
-            if ($statusCode[0] === 'D' || $statusCode[1] === 'D') {
             }
 
             if ($statusCode !== '??') {

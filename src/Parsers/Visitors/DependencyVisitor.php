@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Parsers\Visitors;
 
 use PhpParser\Node;
@@ -16,8 +18,10 @@ class DependencyVisitor extends NodeVisitorAbstract
      * This method is called when the visitor enters a node.
      * It is used to collect information about the node.
      *
+     * @param Node $node
+     * @return int|null|Node|Node[]
      */
-    public function enterNode(Node $node): void
+    public function enterNode(Node $node): int|Node|array|null
     {
         if ($node instanceof Node\Stmt\Use_) {
             foreach ($node->uses as $use) {
@@ -43,6 +47,8 @@ class DependencyVisitor extends NodeVisitorAbstract
         if ($node instanceof Node\Stmt\Function_) {
             $this->definedFunctions[] = $node->name->toString();
         }
+
+        return null;
     }
 
     /**

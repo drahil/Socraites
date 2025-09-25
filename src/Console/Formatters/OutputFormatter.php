@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Console\Formatters;
 
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -19,7 +21,7 @@ class OutputFormatter
         'commit' => '💬',
     ];
 
-    public function __construct(protected array $response)
+    public function __construct(protected array $response = [])
     {
         $this->output = new ConsoleOutput();
         $this->configureStyles();

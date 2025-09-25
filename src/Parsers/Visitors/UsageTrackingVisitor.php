@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Parsers\Visitors;
 
 use PhpParser\Node;
@@ -89,7 +91,7 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
      * @param array $nodes The nodes to be traversed.
      * @return null
      */
-    public function beforeTraverse(array $nodes)
+    public function beforeTraverse(array $nodes): null
     {
         $this->currentNamespace = '';
         $this->variableTypes = [];
@@ -101,13 +103,14 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
      * It is used to collect information about the node.
      *
      * @param Node $node The node being visited.
-     * @return void
+     * @return int|null|Node|Node[]
      */
-    public function enterNode(Node $node): void
+    public function enterNode(Node $node): int|Node|array|null
     {
         if ($node instanceof Node\Stmt\Namespace_) {
             $this->currentNamespace = $node->name ? $node->name->toString() : '';
-            return;
+
+            return null;
         }
 
         $this->trackVariableAssignments($node);
@@ -115,6 +118,8 @@ class UsageTrackingVisitor extends NodeVisitorAbstract
         $this->trackStaticCalls($node);
         $this->trackNewInstances($node);
         $this->trackTypeHints($node);
+
+        return null;
     }
 
     /**

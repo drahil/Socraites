@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace drahil\Socraites\Services\Tasks;
 
 use drahil\Socraites\Parsers\FileParser;
@@ -79,5 +81,4 @@ class ProcessFilesTask implements ContextTaskInterface
 
         return $score;
     }
-
 }

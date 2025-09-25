@@ -1,30 +1,34 @@
 <?php
 
-namespace drahil\Socraites\Console;
+declare(strict_types=1);
+
+namespace drahil\Socraites\Console\Commands;
 
 use drahil\Socraites\Console\Formatters\OutputFormatter;
+use drahil\Socraites\Console\QuotePrinter;
 use drahil\Socraites\Services\AiService;
-use drahil\Socraites\Services\ContextBuilder;
 use drahil\Socraites\Services\ChangedFilesService;
+use drahil\Socraites\Services\ContextBuilder;
+use drahil\Socraites\Services\Tools\ProvideCodeReviewTool;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
 class CodeReviewCommand extends Command
 {
-    protected ContextBuilder $contextBuilder;
+    protected AiService $aiService;
 
     public function __construct(
         private readonly ChangedFilesService $changedFilesService,
-        private readonly AiService $aiService,
         private readonly OutputFormatter $formatter,
-        private readonly QuotePrinter $quotePrinter
+        private readonly QuotePrinter $quotePrinter,
     ) {
-        parent::__construct('code-review');
+        parent::__construct('socraites:code-review');
+
+        $this->aiService = new AiService(config('socraites.openai_api_key'));
     }
 
     /**
@@ -32,18 +36,7 @@ class CodeReviewCommand extends Command
      */
     protected function configure(): void
     {
-        $this->setDescription('Perform an AI code review')
-            ->addOption(
-                'framework',
-                null,
-                InputOption::VALUE_OPTIONAL,
-                'Framework that is used in the project'
-            )->addOption(
-                'verbose-output',
-                null,
-                InputOption::VALUE_NONE,
-                'Enable verbose output'
-            );
+        $this->setDescription('Perform an AI code review');
     }
 
     /**
@@ -59,17 +52,25 @@ class CodeReviewCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        [$framework, $verbose] = $this->getValuesFromInput($input);
-
         $changedCode = $this->changedFilesService->getGitDiff();
         $changedFiles = $this->changedFilesService->getChangedFiles();
 
-        $this->quotePrinter->printQuote();
+        $this->quotePrinter->printQuote($output);
 
-        $this->contextBuilder = new ContextBuilder($changedFiles);
-        $context = $this->contextBuilder->buildContext();
+        $contextBuilder = new ContextBuilder(
+            $this->aiService,
+            $changedCode,
+            $changedFiles,
+        );
 
-        $this->getCodeReview($changedCode, $context, $framework, $verbose);
+        $context = $contextBuilder->build();
+
+        if (! $context) {
+            $this->formatter->printError();
+            return Command::FAILURE;
+        }
+
+        $this->getCodeReview($changedCode, $context);
 
         $io = new SymfonyStyle($input, $output);
         $this->continueConversation($io);
@@ -82,18 +83,19 @@ class CodeReviewCommand extends Command
     /**
      * Get the code review from the AI service based on the changed code and context.
      *
+     * @param string $changedCode The code that has changed.
+     * @param array $context The context built from the changed files.
      */
-    private function getCodeReview($changedCode, $context, $framework, $verbose): void
+    private function getCodeReview(string $changedCode, array $context): void
     {
         try {
             $codeReview = $this->aiService
                 ->buildPayload()
                 ->usingModel(socraites_config('openai_model'))
-                ->withPrompt(socraites_config('code_review_prompt'))
+                ->withPrompt(config('socraites.prompts.code_review_message'))
                 ->withUserMessage('Git diff', $changedCode)
                 ->withUserMessage('Context', json_encode($context, JSON_PRETTY_PRINT))
-                ->withUserMessage('Framework', $framework)
-                ->withUserMessage('Verbose', $verbose)
+                ->withTool(new ProvideCodeReviewTool())
                 ->withTemperature(socraites_config('temperature', 0.2))
                 ->getResponse();
         } catch (Throwable $e) {
@@ -106,25 +108,11 @@ class CodeReviewCommand extends Command
     }
 
     /**
-     * Get the framework and verbose options from the input.
-     *
-     * @param InputInterface $input
-     * @return array
-     */
-    private function getValuesFromInput(InputInterface $input): array
-    {
-        $framework = $input->getOption('framework') ?: socraites_config('framework');
-        $verbose = $input->getOption('verbose-output') ?: socraites_config('verbose_answer');
-
-        return [$framework, $verbose];
-    }
-
-    /**
      * Continues the conversation with the AI after the initial code review.
      *
-     * @throws GuzzleException
+     * @param SymfonyStyle $io The SymfonyStyle instance for input/output.
      */
-    private function continueConversation($io): void
+    private function continueConversation(SymfonyStyle $io): void
     {
         while (true) {
             $questionForAi = $io->ask(

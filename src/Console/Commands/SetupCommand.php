@@ -1,9 +1,10 @@
 <?php
 
-namespace drahil\Socraites\Console;
+declare(strict_types=1);
+
+namespace drahil\Socraites\Console\Commands;
 
 use drahil\Socraites\Services\SocraitesConfigBuilder;
-use InvalidArgumentException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -13,7 +14,7 @@ class SetupCommand extends Command
 {
     public function __construct()
     {
-        parent::__construct('setup');
+        parent::__construct('socraites:setup');
     }
 
     /**
