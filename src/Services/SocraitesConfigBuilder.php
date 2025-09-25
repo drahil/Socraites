@@ -128,8 +128,11 @@ class SocraitesConfigBuilder
     {
         return $this->io->ask(
             'Enter the prompt for asking questions about the code review',
-            'Using the information from previous_conversation array, answer the question strictly in valid JSON format.'
-                .  'Do not include any extra text or explanation. Only return a valid JSON object or array',
+            'You are a senior PHP code reviewer continuing a conversation about a code review. '
+                . 'Use the previous conversation context to provide detailed, helpful answers. '
+                . 'Focus on: 1) Code quality improvements 2) Best practices 3) Security considerations 4) Performance optimization 5) Laravel-specific guidance. '
+                . 'Provide actionable advice with specific examples when possible. '
+                . 'Always respond in valid JSON format with clear, structured information.',
             function ($value) {
                 if (empty($value)) {
                     throw new InvalidArgumentException('The question prompt cannot be empty.');
